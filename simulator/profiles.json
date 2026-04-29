@@ -1,0 +1,517 @@
+[
+  {
+    "id": "R001",
+    "name": "Marie D.",
+    "age": 84,
+    "room": "101",
+    "mobility": "autonomous",
+    "pathologies": [
+      "hypertension"
+    ],
+    "baseline": {
+      "hr": 72,
+      "spo2": 97,
+      "sys": 135,
+      "dia": 80,
+      "temp": 36.8
+    },
+    "routine": {
+      "wake": "07:00",
+      "sleep": "22:00",
+      "meals": [
+        "08:00",
+        "12:30",
+        "19:00"
+      ]
+    }
+  },
+  {
+    "id": "R002",
+    "name": "Jean P.",
+    "age": 79,
+    "room": "102",
+    "mobility": "autonomous",
+    "pathologies": [],
+    "baseline": {
+      "hr": 68,
+      "spo2": 98,
+      "sys": 128,
+      "dia": 78,
+      "temp": 36.7
+    },
+    "routine": {
+      "wake": "06:30",
+      "sleep": "21:30",
+      "meals": [
+        "08:00",
+        "12:30",
+        "19:00"
+      ]
+    }
+  },
+  {
+    "id": "R003",
+    "name": "Suzanne L.",
+    "age": 88,
+    "room": "103",
+    "mobility": "assisted",
+    "pathologies": [
+      "alzheimer"
+    ],
+    "baseline": {
+      "hr": 76,
+      "spo2": 96,
+      "sys": 140,
+      "dia": 82,
+      "temp": 36.6
+    },
+    "routine": {
+      "wake": "07:30",
+      "sleep": "21:00",
+      "meals": [
+        "08:00",
+        "12:30",
+        "19:00"
+      ]
+    }
+  },
+  {
+    "id": "R004",
+    "name": "Pierre M.",
+    "age": 81,
+    "room": "104",
+    "mobility": "wheelchair",
+    "pathologies": [
+      "diabetes"
+    ],
+    "baseline": {
+      "hr": 74,
+      "spo2": 96,
+      "sys": 138,
+      "dia": 84,
+      "temp": 36.7
+    },
+    "routine": {
+      "wake": "07:00",
+      "sleep": "22:00",
+      "meals": [
+        "08:00",
+        "12:30",
+        "19:00"
+      ]
+    }
+  },
+  {
+    "id": "R005",
+    "name": "Yvette R.",
+    "age": 91,
+    "room": "105",
+    "mobility": "bedridden",
+    "pathologies": [
+      "heart_failure"
+    ],
+    "baseline": {
+      "hr": 80,
+      "spo2": 94,
+      "sys": 130,
+      "dia": 78,
+      "temp": 36.5
+    },
+    "routine": {
+      "wake": "08:00",
+      "sleep": "20:30",
+      "meals": [
+        "08:30",
+        "12:30",
+        "19:00"
+      ]
+    }
+  },
+  {
+    "id": "R006",
+    "name": "Michel B.",
+    "age": 77,
+    "room": "106",
+    "mobility": "autonomous",
+    "pathologies": [],
+    "baseline": {
+      "hr": 70,
+      "spo2": 98,
+      "sys": 125,
+      "dia": 78,
+      "temp": 36.8
+    },
+    "routine": {
+      "wake": "06:30",
+      "sleep": "22:30",
+      "meals": [
+        "08:00",
+        "12:30",
+        "19:30"
+      ]
+    }
+  },
+  {
+    "id": "R007",
+    "name": "Anne T.",
+    "age": 85,
+    "room": "107",
+    "mobility": "assisted",
+    "pathologies": [
+      "hypertension",
+      "diabetes"
+    ],
+    "baseline": {
+      "hr": 78,
+      "spo2": 95,
+      "sys": 145,
+      "dia": 88,
+      "temp": 36.7
+    },
+    "routine": {
+      "wake": "07:00",
+      "sleep": "21:30",
+      "meals": [
+        "08:00",
+        "12:30",
+        "19:00"
+      ]
+    }
+  },
+  {
+    "id": "R008",
+    "name": "Henri S.",
+    "age": 83,
+    "room": "108",
+    "mobility": "autonomous",
+    "pathologies": [
+      "copd"
+    ],
+    "baseline": {
+      "hr": 74,
+      "spo2": 92,
+      "sys": 132,
+      "dia": 80,
+      "temp": 36.7
+    },
+    "routine": {
+      "wake": "07:00",
+      "sleep": "22:00",
+      "meals": [
+        "08:00",
+        "12:30",
+        "19:00"
+      ]
+    }
+  },
+  {
+    "id": "R009",
+    "name": "Lucienne G.",
+    "age": 87,
+    "room": "109",
+    "mobility": "wheelchair",
+    "pathologies": [
+      "alzheimer",
+      "hypertension"
+    ],
+    "baseline": {
+      "hr": 76,
+      "spo2": 96,
+      "sys": 138,
+      "dia": 82,
+      "temp": 36.6
+    },
+    "routine": {
+      "wake": "07:30",
+      "sleep": "21:00",
+      "meals": [
+        "08:00",
+        "12:30",
+        "19:00"
+      ]
+    }
+  },
+  {
+    "id": "R010",
+    "name": "Robert F.",
+    "age": 80,
+    "room": "110",
+    "mobility": "autonomous",
+    "pathologies": [],
+    "baseline": {
+      "hr": 72,
+      "spo2": 97,
+      "sys": 130,
+      "dia": 80,
+      "temp": 36.8
+    },
+    "routine": {
+      "wake": "07:00",
+      "sleep": "22:00",
+      "meals": [
+        "08:00",
+        "12:30",
+        "19:00"
+      ]
+    }
+  },
+  {
+    "id": "R011",
+    "name": "Denise K.",
+    "age": 86,
+    "room": "111",
+    "mobility": "assisted",
+    "pathologies": [
+      "arthritis"
+    ],
+    "baseline": {
+      "hr": 74,
+      "spo2": 96,
+      "sys": 134,
+      "dia": 80,
+      "temp": 36.7
+    },
+    "routine": {
+      "wake": "07:00",
+      "sleep": "21:30",
+      "meals": [
+        "08:00",
+        "12:30",
+        "19:00"
+      ]
+    }
+  },
+  {
+    "id": "R012",
+    "name": "Georges V.",
+    "age": 82,
+    "room": "112",
+    "mobility": "autonomous",
+    "pathologies": [
+      "parkinson"
+    ],
+    "baseline": {
+      "hr": 70,
+      "spo2": 97,
+      "sys": 128,
+      "dia": 78,
+      "temp": 36.7
+    },
+    "routine": {
+      "wake": "06:45",
+      "sleep": "22:00",
+      "meals": [
+        "08:00",
+        "12:30",
+        "19:00"
+      ]
+    }
+  },
+  {
+    "id": "R013",
+    "name": "Paulette H.",
+    "age": 89,
+    "room": "113",
+    "mobility": "bedridden",
+    "pathologies": [
+      "dementia"
+    ],
+    "baseline": {
+      "hr": 78,
+      "spo2": 95,
+      "sys": 135,
+      "dia": 82,
+      "temp": 36.6
+    },
+    "routine": {
+      "wake": "08:00",
+      "sleep": "20:30",
+      "meals": [
+        "08:30",
+        "12:30",
+        "19:00"
+      ]
+    }
+  },
+  {
+    "id": "R014",
+    "name": "Bernard A.",
+    "age": 78,
+    "room": "114",
+    "mobility": "autonomous",
+    "pathologies": [
+      "diabetes"
+    ],
+    "baseline": {
+      "hr": 72,
+      "spo2": 97,
+      "sys": 132,
+      "dia": 80,
+      "temp": 36.7
+    },
+    "routine": {
+      "wake": "07:00",
+      "sleep": "22:00",
+      "meals": [
+        "08:00",
+        "12:30",
+        "19:00"
+      ]
+    }
+  },
+  {
+    "id": "R015",
+    "name": "Christiane O.",
+    "age": 85,
+    "room": "115",
+    "mobility": "assisted",
+    "pathologies": [
+      "osteoporosis"
+    ],
+    "baseline": {
+      "hr": 74,
+      "spo2": 96,
+      "sys": 130,
+      "dia": 78,
+      "temp": 36.7
+    },
+    "routine": {
+      "wake": "07:30",
+      "sleep": "21:30",
+      "meals": [
+        "08:00",
+        "12:30",
+        "19:00"
+      ]
+    }
+  },
+  {
+    "id": "R016",
+    "name": "Andre N.",
+    "age": 84,
+    "room": "116",
+    "mobility": "autonomous",
+    "pathologies": [
+      "hypertension"
+    ],
+    "baseline": {
+      "hr": 76,
+      "spo2": 97,
+      "sys": 138,
+      "dia": 84,
+      "temp": 36.8
+    },
+    "routine": {
+      "wake": "06:30",
+      "sleep": "22:00",
+      "meals": [
+        "08:00",
+        "12:30",
+        "19:00"
+      ]
+    }
+  },
+  {
+    "id": "R017",
+    "name": "Madeleine C.",
+    "age": 90,
+    "room": "117",
+    "mobility": "wheelchair",
+    "pathologies": [
+      "heart_failure",
+      "diabetes"
+    ],
+    "baseline": {
+      "hr": 82,
+      "spo2": 93,
+      "sys": 140,
+      "dia": 84,
+      "temp": 36.5
+    },
+    "routine": {
+      "wake": "08:00",
+      "sleep": "20:30",
+      "meals": [
+        "08:30",
+        "12:30",
+        "19:00"
+      ]
+    }
+  },
+  {
+    "id": "R018",
+    "name": "Roger W.",
+    "age": 76,
+    "room": "118",
+    "mobility": "autonomous",
+    "pathologies": [],
+    "baseline": {
+      "hr": 70,
+      "spo2": 98,
+      "sys": 125,
+      "dia": 78,
+      "temp": 36.7
+    },
+    "routine": {
+      "wake": "07:00",
+      "sleep": "22:30",
+      "meals": [
+        "08:00",
+        "12:30",
+        "19:00"
+      ]
+    }
+  },
+  {
+    "id": "R019",
+    "name": "Simone E.",
+    "age": 88,
+    "room": "119",
+    "mobility": "assisted",
+    "pathologies": [
+      "alzheimer"
+    ],
+    "baseline": {
+      "hr": 76,
+      "spo2": 95,
+      "sys": 134,
+      "dia": 80,
+      "temp": 36.6
+    },
+    "routine": {
+      "wake": "07:30",
+      "sleep": "21:00",
+      "meals": [
+        "08:00",
+        "12:30",
+        "19:00"
+      ]
+    }
+  },
+  {
+    "id": "R020",
+    "name": "Claude J.",
+    "age": 81,
+    "room": "120",
+    "mobility": "autonomous",
+    "pathologies": [
+      "hypertension"
+    ],
+    "baseline": {
+      "hr": 74,
+      "spo2": 97,
+      "sys": 136,
+      "dia": 82,
+      "temp": 36.8
+    },
+    "routine": {
+      "wake": "07:00",
+      "sleep": "22:00",
+      "meals": [
+        "08:00",
+        "12:30",
+        "19:00"
+      ]
+    }
+  }
+]
