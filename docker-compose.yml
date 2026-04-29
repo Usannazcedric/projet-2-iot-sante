@@ -76,6 +76,32 @@ services:
       retries: 10
       start_period: 15s
 
+  backend:
+    build: ./backend
+    container_name: ehpad-backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      mosquitto: { condition: service_healthy }
+      redis:     { condition: service_healthy }
+      influxdb:  { condition: service_healthy }
+    environment:
+      MQTT_HOST: mosquitto
+      MQTT_PORT: 1883
+      REDIS_URL: redis://redis:6379
+      INFLUX_URL: http://influxdb:8086
+      INFLUX_TOKEN: ehpad-token-dev
+      INFLUX_ORG: ehpad
+      INFLUX_BUCKET: ehpad_vitals
+      LOG_LEVEL: INFO
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
 volumes:
   mosquitto-data:
   redis-data:
