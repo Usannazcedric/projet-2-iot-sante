@@ -5,13 +5,16 @@ from datetime import datetime
 from typing import Any
 import numpy as np
 from .profiles import Profile
+from .sensors import vitals as vitals_mod
+from .sensors import motion as motion_mod
 
 
 @dataclass
 class Resident:
     profile: Profile
     rng: np.random.Generator
-    seq: itertools.count = field(default_factory=lambda: itertools.count(1))
+    seq_vitals: itertools.count = field(default_factory=lambda: itertools.count(1))
+    seq_motion: itertools.count = field(default_factory=lambda: itertools.count(1))
     activity: str = "idle"
     scenario: str = "normal"
 
@@ -21,18 +24,22 @@ class Resident:
         return cls(profile=profile, rng=rng)
 
     def tick(self, now: datetime) -> dict[str, Any]:
-        b = self.profile.baseline
-        hr = int(b.hr + self.rng.normal(0, 3))
-        spo2 = int(np.clip(b.spo2 + self.rng.normal(0, 1), 90, 100))
-        sys = int(b.sys + self.rng.normal(0, 4))
-        dia = int(b.dia + self.rng.normal(0, 3))
-        if dia > sys - 20:
-            dia = sys - 20
-        temp = float(round(b.temp + self.rng.normal(0, 0.1), 2))
+        v = vitals_mod.generate(self.profile, self.activity, self.rng)
+        ts = now.isoformat(timespec="milliseconds").replace("+00:00", "Z")
         return {
-            "timestamp": now.isoformat(timespec="milliseconds").replace("+00:00", "Z"),
+            "timestamp": ts,
             "resident_id": self.profile.id,
-            "values": {"hr": hr, "spo2": spo2, "sys": sys, "dia": dia, "temp": temp},
-            "vitals": {"hr": hr, "spo2": spo2, "sys": sys, "dia": dia, "temp": temp},
-            "seq": next(self.seq),
+            "values": dict(v),
+            "vitals": dict(v),
+            "seq": next(self.seq_vitals),
+        }
+
+    def tick_motion(self, now: datetime) -> dict[str, Any]:
+        a = motion_mod.generate(self.activity, self.rng)
+        ts = now.isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        return {
+            "timestamp": ts,
+            "resident_id": self.profile.id,
+            "values": dict(a),
+            "seq": next(self.seq_motion),
         }
