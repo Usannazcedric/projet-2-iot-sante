@@ -24,7 +24,9 @@ class Resident:
         return cls(profile=profile, rng=rng)
 
     def tick(self, now: datetime) -> dict[str, Any]:
-        v = vitals_mod.generate(self.profile, self.activity, self.rng)
+        severity = 1.0 if self.scenario in {"cardiac", "degradation"} else 0.0
+        v = vitals_mod.generate(self.profile, self.activity, self.rng,
+                                scenario=self.scenario, severity=severity)
         ts = now.isoformat(timespec="milliseconds").replace("+00:00", "Z")
         return {
             "timestamp": ts,
