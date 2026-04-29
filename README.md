@@ -28,4 +28,29 @@ Stop everything:
 docker compose down
 ```
 
+## Simulator (sub-project 2 — landed)
+
+The simulator publishes synthetic vitals + motion + ambient data for 20 residents at 1 Hz / 5 Hz over MQTT.
+
+```bash
+docker compose up -d --build
+curl -fsS http://localhost:9100/health
+curl -fsS http://localhost:9100/residents | python3 -m json.tool | head -40
+```
+
+Inject a scenario (fall, cardiac, degradation, wandering, normal):
+
+```bash
+curl -fsS -X POST http://localhost:9100/scenario/R007 \
+  -H 'Content-Type: application/json' -d '{"name":"degradation"}'
+```
+
+Watch the live MQTT stream for any resident:
+
+```bash
+docker exec ehpad-mosquitto mosquitto_sub -h localhost -t 'ehpad/vitals/resident/+' -v
+```
+
+`DEMO_MODE=true` (default in compose) compresses scenario timings.
+
 See `docs/infra-quickstart.md` for troubleshooting.
