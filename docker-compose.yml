@@ -30,6 +30,29 @@ services:
       retries: 5
       start_period: 3s
 
+  influxdb:
+    image: influxdb:2.7
+    container_name: ehpad-influxdb
+    ports:
+      - "8086:8086"
+    environment:
+      DOCKER_INFLUXDB_INIT_MODE: setup
+      DOCKER_INFLUXDB_INIT_USERNAME: admin
+      DOCKER_INFLUXDB_INIT_PASSWORD: ehpad-admin
+      DOCKER_INFLUXDB_INIT_ORG: ehpad
+      DOCKER_INFLUXDB_INIT_BUCKET: ehpad_vitals
+      DOCKER_INFLUXDB_INIT_ADMIN_TOKEN: ehpad-token-dev
+    volumes:
+      - influx-data:/var/lib/influxdb2
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "influx", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
 volumes:
   mosquitto-data:
   redis-data:
+  influx-data:
