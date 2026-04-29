@@ -34,7 +34,7 @@ _escalation: EscalationManager | None = None
 
 async def _dispatch(family: str, key: str, payload: bytes) -> None:
     assert _cache is not None and _influx is not None
-    await h.handle(family, key, payload, _cache, _influx)
+    await h.handle(family, key, payload, _cache, _influx, _mqtt)
 
 
 @asynccontextmanager
