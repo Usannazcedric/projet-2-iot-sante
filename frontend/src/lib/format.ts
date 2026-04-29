@@ -29,3 +29,28 @@ export const LEVEL_COLORS: Record<number, string> = {
   4: "bg-level-4",
   5: "bg-level-5",
 };
+
+export const LEVEL_DESCRIPTIONS: Record<number, string> = {
+  1: "Situation à surveiller, pas d'urgence",
+  2: "Constante légèrement anormale, à vérifier",
+  3: "Anomalie significative, intervention conseillée",
+  4: "Situation grave, intervention immédiate requise",
+  5: "Urgence vitale — appeler le 15",
+};
+
+export const ACTIVITY_LABELS: Record<string, string> = {
+  walking: "En marche",
+  sitting: "Assis(e)",
+  lying: "Allongé(e)",
+  fall_detected: "CHUTE DETECTEE",
+  stationary: "Immobile",
+};
+
+export const STATUS_BY_LEVEL: Record<number, { text: string; cls: string }> = {
+  0: { text: "Tout va bien", cls: "text-green-400" },
+  1: { text: "Information", cls: "text-blue-400" },
+  2: { text: "Attention requise", cls: "text-yellow-400" },
+  3: { text: "Alerte active", cls: "text-orange-400" },
+  4: { text: "URGENCE", cls: "text-red-400 font-bold tracking-wide" },
+  5: { text: "DANGER VITAL", cls: "text-white font-bold tracking-wider" },
+};
