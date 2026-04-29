@@ -15,7 +15,7 @@ export function GridPage() {
   }, [residents, alerts]);
 
   if (sorted.length === 0) {
-    return <div className="p-8 text-slate-500">Loading residents…</div>;
+    return <div className="p-8 text-zinc-400">Chargement des résidents…</div>;
   }
   return (
     <div className="p-6">

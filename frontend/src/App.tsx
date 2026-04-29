@@ -16,7 +16,7 @@ export default function App() {
           <Route path="/" element={<GridPage />} />
           <Route path="/resident/:id" element={<ResidentDetail />} />
           <Route path="/alerts" element={<AlertLog />} />
-          <Route path="*" element={<div className="p-8 text-slate-500">Not found</div>} />
+          <Route path="*" element={<div className="p-8 text-zinc-400">Page introuvable</div>} />
         </Routes>
       </main>
       <AlertToast />

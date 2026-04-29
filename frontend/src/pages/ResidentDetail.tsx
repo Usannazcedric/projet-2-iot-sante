@@ -42,31 +42,39 @@ export function ResidentDetail() {
     try { await api.injectScenario(id, name); } finally { setScenarioBusy(false); }
   };
 
-  if (!resident) return <div className="p-8 text-slate-500">Loading {id}…</div>;
+  if (!resident) return <div className="p-8 text-zinc-400">Chargement {id}…</div>;
   const v = resident.vitals;
   const m = resident.motion;
+
+  const scenarioLabels: Record<string, string> = {
+    normal: "Normal",
+    fall: "Chute",
+    cardiac: "Cardiaque",
+    wandering: "Errance",
+    degradation: "Dégradation",
+  };
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-4">
       <div className="flex items-center gap-3">
-        <Link to="/" className="text-slate-500 hover:text-slate-900 text-sm">← Back</Link>
-        <h1 className="text-2xl font-bold">{id}</h1>
-        <span className="text-sm text-slate-500">last seen {fmtRelative(resident.last_seen)} ago</span>
+        <Link to="/" className="text-zinc-400 hover:text-white text-sm">← Retour</Link>
+        <h1 className="text-2xl font-bold text-white">{id}</h1>
+        <span className="text-sm text-zinc-400">dernière mesure il y a {fmtRelative(resident.last_seen)}</span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Card>
           <CardHeader>
-            <div className="font-semibold">Current vitals</div>
+            <div className="font-semibold text-white">Constantes actuelles</div>
           </CardHeader>
           <CardBody className="grid grid-cols-3 gap-3">
-            <VitalGauge label="HR" value={v?.hr} unit="bpm" warn={(x) => x > 100 || x < 55} crit={(x) => x > 140 || x < 40} />
+            <VitalGauge label="FC" value={v?.hr} unit="bpm" warn={(x) => x > 100 || x < 55} crit={(x) => x > 140 || x < 40} />
             <VitalGauge label="SpO2" value={v?.spo2} unit="%" warn={(x) => x < 95} crit={(x) => x < 88} />
             <VitalGauge label="T°" value={v?.temp} unit="°C" warn={(x) => x < 35.5 || x > 37.8} crit={(x) => x < 35 || x > 38.5} />
             <VitalGauge label="Sys" value={v?.sys} unit="mmHg" />
             <VitalGauge label="Dia" value={v?.dia} unit="mmHg" />
-            <VitalGauge label="Activity" value={undefined} unit={m?.activity ?? "—"} />
-            <VitalGauge label="Risk" value={typeof resident.risk === "number" ? Math.round(resident.risk * 100) : null} unit="%"
+            <VitalGauge label="Activité" value={undefined} unit={m?.activity ?? "—"} />
+            <VitalGauge label="Risque" value={typeof resident.risk === "number" ? Math.round(resident.risk * 100) : null} unit="%"
               warn={(x) => x >= 30}
               crit={(x) => x >= 60} />
           </CardBody>
@@ -74,17 +82,17 @@ export function ResidentDetail() {
 
         <Card>
           <CardHeader>
-            <div className="font-semibold">Active alerts</div>
+            <div className="font-semibold text-white">Alertes actives</div>
           </CardHeader>
           <CardBody className="space-y-2">
             {alerts.length === 0 ? (
-              <div className="text-slate-500 text-sm">None.</div>
+              <div className="text-zinc-400 text-sm">Aucune.</div>
             ) : alerts.map((a) => (
-              <div key={a.id} className="border border-slate-200 rounded-md p-3 flex items-center gap-3">
+              <div key={a.id} className="border border-zinc-800 rounded-md p-3 flex items-center gap-3">
                 <AlertBadge level={a.level} />
                 <div className="flex-1 text-sm">
-                  <div className="font-medium">{LEVEL_LABELS[a.level]} — {a.reason}</div>
-                  <div className="text-xs text-slate-500">{a.status} · {fmtRelative(a.created_at)} ago</div>
+                  <div className="font-medium text-white">{LEVEL_LABELS[a.level]} — {a.reason}</div>
+                  <div className="text-xs text-zinc-400">{a.status} · il y a {fmtRelative(a.created_at)}</div>
                 </div>
                 <AckButton alert={a} />
               </div>
@@ -95,7 +103,7 @@ export function ResidentDetail() {
 
       <Card>
         <CardHeader>
-          <div className="font-semibold">Vitals — last 15 min</div>
+          <div className="font-semibold text-white">Constantes — 15 dernières min</div>
         </CardHeader>
         <CardBody>
           <VitalChart rows={rows} fields={["hr", "spo2", "temp"]} />
@@ -104,11 +112,11 @@ export function ResidentDetail() {
 
       <Card>
         <CardHeader>
-          <div className="font-semibold">Demo controls — inject scenario</div>
+          <div className="font-semibold text-white">Démo — injecter un scénario</div>
         </CardHeader>
         <CardBody className="flex gap-2 flex-wrap">
           {["normal", "fall", "cardiac", "wandering", "degradation"].map((n) => (
-            <Button key={n} variant="secondary" disabled={scenarioBusy} onClick={() => inject(n)}>{n}</Button>
+            <Button key={n} variant="secondary" disabled={scenarioBusy} onClick={() => inject(n)}>{scenarioLabels[n] ?? n}</Button>
           ))}
         </CardBody>
       </Card>

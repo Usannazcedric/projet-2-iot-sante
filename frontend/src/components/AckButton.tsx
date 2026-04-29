@@ -31,9 +31,9 @@ export function AckButton({ alert }: { alert: Alert }) {
   return (
     <div className="flex gap-2">
       {alert.status === "active" && (
-        <Button variant="primary" disabled={busy} onClick={onAck}>Acknowledge</Button>
+        <Button variant="primary" disabled={busy} onClick={onAck}>Acquitter</Button>
       )}
-      <Button variant="secondary" disabled={busy} onClick={onResolve}>Resolve</Button>
+      <Button variant="secondary" disabled={busy} onClick={onResolve}>Résoudre</Button>
     </div>
   );
 }

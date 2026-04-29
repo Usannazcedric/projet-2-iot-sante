@@ -3,10 +3,10 @@ import { ButtonHTMLAttributes, forwardRef } from "react";
 type Variant = "primary" | "secondary" | "danger" | "ghost";
 
 const VARIANTS: Record<Variant, string> = {
-  primary: "bg-slate-900 text-white hover:bg-slate-800",
-  secondary: "bg-white text-slate-900 border border-slate-300 hover:bg-slate-100",
+  primary: "bg-purple-600 text-white hover:bg-purple-700",
+  secondary: "bg-zinc-800 text-white border border-purple-500 hover:bg-zinc-700",
   danger: "bg-red-600 text-white hover:bg-red-700",
-  ghost: "text-slate-700 hover:bg-slate-100",
+  ghost: "text-zinc-300 hover:bg-zinc-800",
 };
 
 interface Props extends ButtonHTMLAttributes<HTMLButtonElement> {

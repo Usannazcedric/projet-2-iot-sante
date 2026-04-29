@@ -14,24 +14,24 @@ export function ResidentCard({ resident, level }: Props) {
   const v = resident.vitals;
   const m = resident.motion;
   const ringByLevel: Record<number, string> = {
-    0: "ring-slate-200",
-    1: "ring-blue-300",
+    0: "ring-zinc-800",
+    1: "ring-blue-500",
     2: "ring-yellow-400",
     3: "ring-orange-500",
     4: "ring-red-500",
-    5: "ring-black",
+    5: "ring-white",
   };
-  const ring = ringByLevel[level] ?? "ring-slate-200";
+  const ring = ringByLevel[level] ?? "ring-zinc-800";
   return (
     <Link to={`/resident/${resident.resident_id}`} className="block">
-      <Card className={`ring-2 ${ring} hover:shadow-md transition-shadow`}>
+      <Card className={`ring-2 ${ring} hover:shadow-lg hover:shadow-purple-900/30 transition-shadow`}>
         <CardBody className="space-y-3">
           <div className="flex items-center justify-between">
-            <div className="font-semibold">{resident.resident_id}</div>
+            <div className="font-semibold text-white">{resident.resident_id}</div>
             {level > 0 && <AlertBadge level={level} />}
           </div>
           <div className="grid grid-cols-3 gap-2">
-            <VitalGauge label="HR" value={v?.hr} unit="bpm"
+            <VitalGauge label="FC" value={v?.hr} unit="bpm"
               warn={(x) => x > 100 || x < 55}
               crit={(x) => x > 140 || x < 40} />
             <VitalGauge label="SpO2" value={v?.spo2} unit="%"
@@ -41,16 +41,16 @@ export function ResidentCard({ resident, level }: Props) {
               warn={(x) => x < 35.5 || x > 37.8}
               crit={(x) => x < 35 || x > 38.5} />
           </div>
-          <div className="flex items-center justify-between text-xs text-slate-500">
+          <div className="flex items-center justify-between text-xs text-zinc-400">
             <span>{m?.activity ?? "—"}</span>
             {typeof resident.risk === "number" && (
               <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
-                resident.risk >= 0.6 ? "bg-orange-100 text-orange-700"
-                : resident.risk >= 0.3 ? "bg-yellow-100 text-yellow-800"
-                : "bg-slate-100 text-slate-600"
-              }`}>risk {(resident.risk * 100).toFixed(0)}</span>
+                resident.risk >= 0.6 ? "bg-orange-900/60 text-orange-300"
+                : resident.risk >= 0.3 ? "bg-yellow-900/60 text-yellow-300"
+                : "bg-zinc-800 text-zinc-300"
+              }`}>risque {(resident.risk * 100).toFixed(0)}</span>
             )}
-            <span>{fmtRelative(resident.last_seen)} ago</span>
+            <span>il y a {fmtRelative(resident.last_seen)}</span>
           </div>
         </CardBody>
       </Card>
