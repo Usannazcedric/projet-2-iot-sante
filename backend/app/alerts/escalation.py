@@ -7,11 +7,12 @@ log = get_logger("backend.alerts.escalation")
 
 
 PROD_DELAYS: Dict[int, float] = {2: 600.0, 3: 300.0, 4: 180.0}
+DEMO_DELAYS: Dict[int, float] = {2: 300.0, 3: 180.0, 4: 120.0}
 
 
 def escalation_delays(demo_mode: bool) -> Dict[int, float]:
     if demo_mode:
-        return {k: v / 10.0 for k, v in PROD_DELAYS.items()}
+        return dict(DEMO_DELAYS)
     return dict(PROD_DELAYS)
 
 

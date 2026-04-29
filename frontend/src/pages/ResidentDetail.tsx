@@ -7,9 +7,12 @@ import { VitalGauge } from "@/components/VitalGauge";
 import { AlertBadge } from "@/components/AlertBadge";
 import { AckButton } from "@/components/AckButton";
 import { VitalChart } from "@/components/VitalChart";
+import { ActivityPattern } from "@/components/ActivityPattern";
 import { Button } from "@/components/ui/Button";
 import { fmtRelative, LEVEL_LABELS, LEVEL_DESCRIPTIONS, ACTIVITY_LABELS, STATUS_BY_LEVEL } from "@/lib/format";
 import { highestLevelFor } from "@/store/store";
+import { RoomStatus } from "@/components/RoomStatus";
+import { Link as RouterLink } from "react-router-dom";
 
 const SCENARIO_LABELS: Record<string, { label: string; desc: string }> = {
   normal: { label: "Normal", desc: "Rétablir les constantes normales" },
@@ -24,6 +27,7 @@ export function ResidentDetail() {
   const resident = useStore((s) => s.residents.get(id));
   const allAlerts = useStore((s) => s.alerts);
   const alerts = useStore((s) => Array.from(s.alerts.values()).filter((a) => a.resident_id === id));
+  const rooms = useStore((s) => s.rooms);
   const [rows, setRows] = useState<Array<{ time: string; field: string; value: number }>>([]);
   const [scenarioBusy, setScenarioBusy] = useState(false);
 
@@ -66,6 +70,7 @@ export function ResidentDetail() {
   const level = highestLevelFor(id, allAlerts);
   const status = STATUS_BY_LEVEL[level] ?? STATUS_BY_LEVEL[0];
   const activityLabel = m?.activity ? (ACTIVITY_LABELS[m.activity] ?? m.activity) : "—";
+  const roomEntry = Array.from(rooms.values()).find((r) => r.resident_id === id);
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-4">
@@ -198,6 +203,25 @@ export function ResidentDetail() {
         </Card>
       </div>
 
+      {roomEntry && (
+        <Card>
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-semibold text-white">Capteurs ambiants — Chambre {roomEntry.room_id}</div>
+                <div className="text-xs text-zinc-500 mt-0.5">Détecteur de mouvement et capteur de porte</div>
+              </div>
+              <RouterLink to="/movements" className="text-xs text-purple-400 hover:text-purple-300">
+                Voir le plan complet →
+              </RouterLink>
+            </div>
+          </CardHeader>
+          <CardBody>
+            <RoomStatus room={roomEntry} />
+          </CardBody>
+        </Card>
+      )}
+
       <Card>
         <CardHeader>
           <div className="font-semibold text-white">Évolution des constantes — 15 dernières minutes</div>
@@ -205,6 +229,16 @@ export function ResidentDetail() {
         </CardHeader>
         <CardBody>
           <VitalChart rows={rows} fields={["hr", "spo2", "temp"]} />
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="font-semibold text-white">Historique d'activité — 24 dernières heures</div>
+          <div className="text-xs text-zinc-500 mt-0.5">Répartition horaire des activités détectées par le capteur de mouvement</div>
+        </CardHeader>
+        <CardBody>
+          <ActivityPattern residentId={id} />
         </CardBody>
       </Card>
 

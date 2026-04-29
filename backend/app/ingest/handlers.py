@@ -1,7 +1,7 @@
 from __future__ import annotations
 import json
 from typing import Any
-from ..models import VitalsPayload, MotionPayload
+from ..models import VitalsPayload, MotionPayload, AmbientPayload
 from ..storage.redis import RedisCache
 from ..logging import get_logger
 
@@ -19,7 +19,8 @@ async def handle(family: str, key: str, raw: str | bytes, cache: RedisCache, inf
             await _handle_vitals(data, cache, influx, publisher)
         elif family == "motion":
             await _handle_motion(data, cache, influx, publisher)
-        # ambient/door deliberately ignored at this stage
+        elif family in ("ambient", "door"):
+            await _handle_ambient(family, data, cache, publisher)
     except Exception as exc:  # noqa: BLE001 -- log and recover; ingest must never crash
         log.error("handler_failed", family=family, key=key, err=str(exc))
 
@@ -55,3 +56,21 @@ async def _handle_motion(data: dict[str, Any], cache: RedisCache, influx: Any, p
                               qos=0)
         except Exception as exc:  # noqa: BLE001
             log.warning("state_publish_failed", resident_id=payload.resident_id, err=str(exc))
+
+
+async def _handle_ambient(family: str, data: dict[str, Any], cache: RedisCache, publisher: Any | None) -> None:
+    payload = AmbientPayload.model_validate(data)
+    room_id = payload.room_id or data.get("room_id") or "unknown"
+    field = "pir" if family == "ambient" else "door"
+    value = int(payload.values.get("value", 0))
+    merged = await cache.merge_room_state(room_id, {
+        "room_id": room_id,
+        "resident_id": payload.resident_id,
+        "last_seen": payload.timestamp,
+        field: value,
+    })
+    if publisher is not None:
+        try:
+            publisher.publish(f"ehpad/state/room/{room_id}", json.dumps(merged), qos=0)
+        except Exception as exc:  # noqa: BLE001
+            log.warning("room_state_publish_failed", room_id=room_id, err=str(exc))

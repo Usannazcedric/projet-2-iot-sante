@@ -21,7 +21,8 @@ class Resident:
     @classmethod
     def from_profile(cls, profile: Profile, seed: int | None = None) -> "Resident":
         rng = np.random.default_rng(seed)
-        return cls(profile=profile, rng=rng)
+        initial_activity = "lying" if profile.mobility == "bedridden" else "idle"
+        return cls(profile=profile, rng=rng, activity=initial_activity)
 
     def tick(self, now: datetime) -> dict[str, Any]:
         severity = 1.0 if self.scenario in {"cardiac", "degradation"} else 0.0

@@ -1,21 +1,25 @@
 import { create } from "zustand";
-import type { Alert, ResidentSnapshot } from "@/lib/api";
+import type { Alert, ResidentSnapshot, RoomSnapshot } from "@/lib/api";
 
 interface State {
   residents: Map<string, ResidentSnapshot>;
   alerts: Map<string, Alert>;
+  rooms: Map<string, RoomSnapshot>;
   connected: boolean;
   setResident: (snap: ResidentSnapshot) => void;
   setResidentBulk: (snaps: ResidentSnapshot[]) => void;
   upsertAlert: (a: Alert) => void;
   setAlertBulk: (alerts: Alert[]) => void;
   removeAlert: (id: string) => void;
+  setRoom: (room: RoomSnapshot) => void;
+  setRoomBulk: (rooms: RoomSnapshot[]) => void;
   setConnected: (ok: boolean) => void;
 }
 
 export const useStore = create<State>((set) => ({
   residents: new Map(),
   alerts: new Map(),
+  rooms: new Map(),
   connected: false,
   setResident: (snap) => set((s) => {
     const m = new Map(s.residents);
@@ -43,6 +47,16 @@ export const useStore = create<State>((set) => ({
     const m = new Map(s.alerts);
     m.delete(id);
     return { alerts: m };
+  }),
+  setRoom: (room) => set((s) => {
+    const m = new Map(s.rooms);
+    m.set(room.room_id, room);
+    return { rooms: m };
+  }),
+  setRoomBulk: (rooms) => set(() => {
+    const m = new Map<string, RoomSnapshot>();
+    for (const r of rooms) m.set(r.room_id, r);
+    return { rooms: m };
   }),
   setConnected: (ok) => set({ connected: ok }),
 }));

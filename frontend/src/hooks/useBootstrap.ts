@@ -11,16 +11,23 @@ export function useBootstrap() {
   const setResident = useStore((s) => s.setResident);
   const upsertAlert = useStore((s) => s.upsertAlert);
   const setConnected = useStore((s) => s.setConnected);
+  const setRoom = useStore((s) => s.setRoom);
+  const setRoomBulk = useStore((s) => s.setRoomBulk);
   const pushToast = useToasts((s) => s.push);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const [residents, alerts] = await Promise.all([api.listResidents(), api.listAlerts()]);
+        const [residents, alerts, rooms] = await Promise.all([
+          api.listResidents(),
+          api.listAlerts(),
+          api.listRooms().catch(() => []),
+        ]);
         if (cancelled) return;
         setResidentBulk(residents);
         setAlertBulk(alerts);
+        setRoomBulk(rooms);
       } catch (err) {
         console.error("bootstrap_failed", err);
       }
@@ -42,6 +49,8 @@ export function useBootstrap() {
           }
         } else if (t.startsWith("alerts/update/")) {
           upsertAlert(env.data);
+        } else if (t.startsWith("state/room/")) {
+          if (env.data?.room_id) setRoom(env.data);
         } else if (t.startsWith("risk/resident/")) {
           if (env.data?.resident_id && typeof env.data?.risk === "number") {
             setResident({ resident_id: env.data.resident_id, risk: env.data.risk });
@@ -55,5 +64,5 @@ export function useBootstrap() {
       cancelled = true;
       close();
     };
-  }, [setResidentBulk, setAlertBulk, setResident, upsertAlert, setConnected, pushToast]);
+  }, [setResidentBulk, setAlertBulk, setResident, upsertAlert, setConnected, pushToast, setRoom, setRoomBulk]);
 }

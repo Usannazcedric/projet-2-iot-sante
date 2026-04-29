@@ -66,3 +66,12 @@ class Alert(BaseModel):
     created_at: str
     updated_at: str
     last_seen: str
+    acknowledged_by: str | None = None
+
+
+class RoomSnapshot(BaseModel):
+    room_id: str
+    resident_id: str | None = None
+    pir: int = 0   # 1 = mouvement détecté
+    door: int = 0  # 1 = porte ouverte
+    last_seen: str | None = None

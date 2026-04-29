@@ -11,6 +11,8 @@ from .ingest import handlers as h
 from .api import health as health_api
 from .api import residents as residents_api
 from .api import alerts as alerts_api
+from .api import rooms as rooms_api
+from .api import staff as staff_api
 from .alerts.store import AlertStore
 from .alerts.engine import AlertEngine
 from .alerts.escalation import EscalationManager
@@ -80,6 +82,7 @@ async def lifespan(app: FastAPI):
     health_api.init(_cache, _mqtt.connected, _influx)
     residents_api.init(_cache, _influx)
     alerts_api.init(store, _escalation, publisher)
+    rooms_api.init(_cache)
     log.info("backend_ready",
              redis=settings.redis_url, influx=settings.influx_url, mqtt=settings.mqtt_host,
              demo_mode=settings.demo_mode)
@@ -116,3 +119,5 @@ app = FastAPI(title="EHPAD Backend", lifespan=lifespan)
 app.include_router(health_api.router)
 app.include_router(residents_api.router, prefix="/residents")
 app.include_router(alerts_api.router, prefix="/alerts")
+app.include_router(rooms_api.router, prefix="/rooms")
+app.include_router(staff_api.router, prefix="/staff")

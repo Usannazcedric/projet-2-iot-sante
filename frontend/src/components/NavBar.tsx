@@ -25,6 +25,12 @@ export function NavBar() {
             </span>
           )}
         </NavLink>
+        <NavLink to="/movements" className={({ isActive }) => `${link} ${isActive ? active : ""}`}>
+          Plan & Mouvements
+        </NavLink>
+        <NavLink to="/personnel" className={({ isActive }) => `${link} ${isActive ? active : ""}`}>
+          Personnel
+        </NavLink>
         <div className="ml-auto flex items-center gap-2 text-xs">
           <span
             className={`h-2 w-2 rounded-full ${connected ? "bg-green-500" : "bg-red-500"}`}

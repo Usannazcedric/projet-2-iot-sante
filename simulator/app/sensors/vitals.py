@@ -30,8 +30,8 @@ def generate(
     elif scenario == "degradation":
         hr_drift = 12.0 * severity
         spo2_drift = -5.0 * severity
-    hr = int(b.hr + activity_hr_offset + hr_drift + rng.normal(0, 3))
-    spo2 = int(np.clip(b.spo2 + spo2_drift + rng.normal(0, 1), 70, 100))
+    hr = int(b.hr + activity_hr_offset + hr_drift + rng.normal(0, 1.5))
+    spo2 = int(np.clip(b.spo2 + spo2_drift + rng.normal(0, 0.4), 70, 100))
     sys = int(b.sys + rng.normal(0, 4))
     dia = int(b.dia + rng.normal(0, 3))
     if dia > sys - 20:

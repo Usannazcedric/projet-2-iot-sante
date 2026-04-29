@@ -19,14 +19,13 @@ def evaluate(state: dict) -> Optional[Tuple[AlertLevel, str]]:
     temp = vitals.get("temp")
     activity = motion.get("activity")
 
-    # L5 — Danger vital: critical vitals + immobile/lying
+    # L5 — Danger vital: extreme HR + very low SpO2 (regardless of activity)
     if (
-        hr is not None and spo2 is not None and sys_p is not None
+        hr is not None and spo2 is not None
         and (hr < 40 or hr > 160)
         and spo2 < 85
-        and activity in ("lying", "still", None)
     ):
-        return AlertLevel.DANGER_VITAL, "critical vitals + immobile"
+        return AlertLevel.DANGER_VITAL, "constantes vitales critiques multiples"
 
     # L4 — Urgence: fall pattern OR critical HR/SpO2 alone
     if activity == "fall":
@@ -47,8 +46,13 @@ def evaluate(state: dict) -> Optional[Tuple[AlertLevel, str]]:
         return AlertLevel.ATTENTION, f"hr elevated ({hr})"
     if spo2 is not None and 88 <= spo2 < 95:
         return AlertLevel.ATTENTION, f"spo2 borderline ({spo2})"
-    if temp is not None and (temp < 35.5 or temp > 37.8):
+    if temp is not None and (temp < 35.5 or temp > 38.0):
         return AlertLevel.ATTENTION, f"temp deviation ({temp})"
 
-    # L1 — Information: emit only with explicit signal (e.g. inactivity flag); none here
+    # L1 — Information: mild deviation not yet reaching L2 threshold
+    if temp is not None and 37.5 <= temp < 38.0:
+        return AlertLevel.INFORMATION, f"température légèrement élevée ({temp:.1f}°C)"
+    if hr is not None and 50 <= hr < 58:
+        return AlertLevel.INFORMATION, f"rythme cardiaque légèrement bas ({hr})"
+
     return None

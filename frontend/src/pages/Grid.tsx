@@ -105,7 +105,7 @@ export function GridPage() {
         ))}
       </div>
 
-      <div className="lg:hidden border border-zinc-800 rounded-lg p-3">
+<div className="lg:hidden border border-zinc-800 rounded-lg p-3">
         <div className="text-xs text-zinc-500 font-medium mb-2">Légende des couleurs de bordure :</div>
         <div className="flex flex-wrap gap-3">
           {LEGEND.map(({ cls, label }) => (

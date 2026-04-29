@@ -7,6 +7,8 @@ import redis.asyncio as aioredis
 STATE_TTL_SECONDS = 60
 RESIDENT_KEY = "state:resident:{id}"
 RESIDENT_PATTERN = "state:resident:*"
+ROOM_KEY = "state:room:{id}"
+ROOM_PATTERN = "state:room:*"
 ML_WINDOW_KEY = "ml:window:{id}"
 ML_WINDOW_MAX = 900  # 15 min @ 1 Hz
 
@@ -45,6 +47,24 @@ class RedisCache:
         current.update(partial)
         await self.set_resident_state(resident_id, current)
         return current
+
+    async def get_room_state(self, room_id: str) -> dict[str, Any] | None:
+        raw = await self.client.get(ROOM_KEY.format(id=room_id))
+        if raw is None:
+            return None
+        return json.loads(raw)
+
+    async def merge_room_state(self, room_id: str, partial: dict[str, Any]) -> dict[str, Any]:
+        current = await self.get_room_state(room_id) or {}
+        current.update(partial)
+        await self.client.set(ROOM_KEY.format(id=room_id), json.dumps(current), ex=STATE_TTL_SECONDS)
+        return current
+
+    async def list_rooms(self) -> list[str]:
+        ids: list[str] = []
+        async for key in self.client.scan_iter(match=ROOM_PATTERN, count=100):
+            ids.append(key.split(":", 2)[-1])
+        return ids
 
     async def push_ml_window(self, resident_id: str, sample: dict[str, Any]) -> None:
         key = ML_WINDOW_KEY.format(id=resident_id)

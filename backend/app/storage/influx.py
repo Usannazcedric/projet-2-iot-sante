@@ -67,6 +67,33 @@ class InfluxWriter:
         )
         await asyncio.to_thread(self._write.write, bucket=self.bucket, org=self.org, record=p)
 
+    async def query_activity_pattern(self, resident_id: str, hours: int = 24) -> list[dict[str, Any]]:
+        qa = self._client.query_api()
+        flux = (
+            f'from(bucket:"{self.bucket}") '
+            f'|> range(start: -{hours}h) '
+            f'|> filter(fn: (r) => r._measurement == "motion" '
+            f'    and r["resident_id"] == "{resident_id}" '
+            f'    and r._field == "ax") '
+            f'|> group(columns: ["resident_id", "activity"]) '
+            f'|> aggregateWindow(every: 1h, fn: count, createEmpty: false) '
+            f'|> group() '
+            f'|> sort(columns: ["_time"]) '
+        )
+        tables = await asyncio.to_thread(qa.query, flux, org=self.org)
+        from collections import defaultdict
+        hourly: dict[str, dict[str, int]] = defaultdict(lambda: defaultdict(int))
+        for table in tables:
+            for record in table.records:
+                t = record.get_time()
+                if t is None:
+                    continue
+                hour = t.replace(minute=0, second=0, microsecond=0).isoformat()
+                activity = str(record.values.get("activity", "unknown"))
+                count = int(record.get_value() or 0)
+                hourly[hour][activity] += count
+        return [{"hour": h, **dict(acts)} for h, acts in sorted(hourly.items())]
+
     async def query_history(self, resident_id: str, metric: str, from_iso: str, to_iso: str) -> list[dict[str, Any]]:
         qa = self._client.query_api()
         flux = (

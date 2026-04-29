@@ -46,3 +46,13 @@ async def get_history(
     to_iso = now.isoformat()
     rows = await influx.query_history(resident_id, metric, from_iso, to_iso)
     return {"resident_id": resident_id, "metric": metric, "rows": rows}
+
+
+@router.get("/{resident_id}/activity-pattern")
+async def get_activity_pattern(
+    resident_id: str,
+    hours: int = Query(24, ge=1, le=168),
+):
+    influx = _state["influx"]
+    data = await influx.query_activity_pattern(resident_id, hours)
+    return {"resident_id": resident_id, "hours": hours, "data": data}

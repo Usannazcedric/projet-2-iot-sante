@@ -7,6 +7,14 @@ export interface ResidentSnapshot {
   motion?: MotionValues | null;
   risk?: number | null;
 }
+export interface RoomSnapshot {
+  room_id: string;
+  resident_id?: string | null;
+  pir: number;   // 0 ou 1
+  door: number;  // 0 ou 1
+  last_seen?: string | null;
+}
+
 export interface Alert {
   id: string;
   resident_id: string;
@@ -16,6 +24,26 @@ export interface Alert {
   created_at: string;
   updated_at: string;
   last_seen: string;
+  acknowledged_by?: string | null;
+}
+
+export interface StaffMember {
+  id: string;
+  name: string;
+  role: string;
+  wing: string;
+  shift: string;
+  on_duty: boolean;
+}
+
+export interface ActivityHour {
+  hour: string;
+  idle?: number;
+  sitting?: number;
+  walking?: number;
+  lying?: number;
+  fall_detected?: number;
+  [key: string]: string | number | undefined;
 }
 
 const API_BASE = "/api";
@@ -36,8 +64,18 @@ export const api = {
       `${API_BASE}/residents/${id}/history?metric=${encodeURIComponent(metric)}&minutes=${minutes}`,
     ),
   listAlerts: () => http<Alert[]>(`${API_BASE}/alerts`),
-  ackAlert: (id: string) => http<Alert>(`${API_BASE}/alerts/${id}/ack`, { method: "POST" }),
+  ackAlert: (id: string, by?: string) => http<Alert>(`${API_BASE}/alerts/${id}/ack`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ by: by ?? null }),
+  }),
   resolveAlert: (id: string) => http<Alert>(`${API_BASE}/alerts/${id}/resolve`, { method: "POST" }),
+  listRooms: () => http<RoomSnapshot[]>(`${API_BASE}/rooms`),
+  listStaff: () => http<StaffMember[]>(`${API_BASE}/staff`),
+  getActivityPattern: (id: string, hours = 24) =>
+    http<{ resident_id: string; hours: number; data: ActivityHour[] }>(
+      `${API_BASE}/residents/${id}/activity-pattern?hours=${hours}`,
+    ),
   injectScenario: (residentId: string, name: string) =>
     http<unknown>(`${SIM_BASE}/scenario/${residentId}`, {
       method: "POST",

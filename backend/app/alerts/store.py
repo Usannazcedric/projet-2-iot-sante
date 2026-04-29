@@ -85,7 +85,7 @@ class AlertStore:
         a.last_seen = _now_iso()
         await self.redis.set(DETAIL_KEY.format(id=alert_id), a.model_dump_json())
 
-    async def set_status(self, alert_id: str, status: str) -> Optional[Alert]:
+    async def set_status(self, alert_id: str, status: str, *, by: str | None = None) -> Optional[Alert]:
         if status not in ("active", "acknowledged", "resolved"):
             raise ValueError(f"invalid status: {status}")
         a = await self.get(alert_id)
@@ -93,6 +93,8 @@ class AlertStore:
             return None
         a.status = status
         a.updated_at = _now_iso()
+        if by:
+            a.acknowledged_by = by
         await self.redis.set(DETAIL_KEY.format(id=alert_id), a.model_dump_json())
         if status == "resolved":
             await self.redis.srem(ACTIVE_SET, alert_id)
