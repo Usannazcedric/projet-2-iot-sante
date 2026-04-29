@@ -7,12 +7,10 @@ import { VitalGauge } from "@/components/VitalGauge";
 import { AlertBadge } from "@/components/AlertBadge";
 import { AckButton } from "@/components/AckButton";
 import { VitalChart } from "@/components/VitalChart";
-import { ActivityPattern } from "@/components/ActivityPattern";
-import { Button } from "@/components/ui/Button";
+import { DailySchedule } from "@/components/DailySchedule";
 import { fmtRelative, LEVEL_LABELS, LEVEL_DESCRIPTIONS, ACTIVITY_LABELS, STATUS_BY_LEVEL } from "@/lib/format";
 import { highestLevelFor } from "@/store/store";
 import { RoomStatus } from "@/components/RoomStatus";
-import { Link as RouterLink } from "react-router-dom";
 
 const SCENARIO_LABELS: Record<string, { label: string; desc: string }> = {
   normal: { label: "Normal", desc: "Rétablir les constantes normales" },
@@ -38,9 +36,7 @@ export function ResidentDetail() {
       try {
         const h = await api.getHistory(id, "vitals", 15);
         if (!cancelled) setRows(h.rows);
-      } catch (err) {
-        console.error("history_failed", err);
-      }
+      } catch { /* ignore */ }
     })();
     const t = setInterval(async () => {
       try {
@@ -211,9 +207,9 @@ export function ResidentDetail() {
                 <div className="font-semibold text-white">Capteurs ambiants — Chambre {roomEntry.room_id}</div>
                 <div className="text-xs text-zinc-500 mt-0.5">Détecteur de mouvement et capteur de porte</div>
               </div>
-              <RouterLink to="/movements" className="text-xs text-purple-400 hover:text-purple-300">
+              <Link to="/movements" className="text-xs text-purple-400 hover:text-purple-300">
                 Voir le plan complet →
-              </RouterLink>
+              </Link>
             </div>
           </CardHeader>
           <CardBody>
@@ -238,7 +234,7 @@ export function ResidentDetail() {
           <div className="text-xs text-zinc-500 mt-0.5">Répartition horaire des activités détectées par le capteur de mouvement</div>
         </CardHeader>
         <CardBody>
-          <ActivityPattern residentId={id} />
+          <DailySchedule residentId={id} />
         </CardBody>
       </Card>
 

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from .resident import Resident
@@ -39,7 +40,6 @@ def inject_scenario(resident_id: str, body: ScenarioBody):
     except KeyError:
         raise HTTPException(400, f"unknown scenario {body.name}")
     r = _residents[resident_id]
-    from datetime import datetime, timezone
     scenario.apply(r, datetime.now(timezone.utc))
     r._active_scenario = scenario  # type: ignore[attr-defined]
     return {"resident_id": resident_id, "scenario": body.name}

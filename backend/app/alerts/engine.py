@@ -53,6 +53,12 @@ class AlertEngine:
         updated = await self.store.update_level(alert_id, new_level, reason)
         if updated is not None:
             await self.publisher.publish_update(updated)
+            # Re-schedule for the next level if still active (chain: L2→L3→L4→L5)
+            if updated.status == "active":
+                try:
+                    self.escalation.schedule(updated.id, updated.level, self._on_escalate)
+                except Exception as exc:  # noqa: BLE001
+                    log.error("reschedule_after_escalation_failed", alert_id=alert_id, err=str(exc))
 
     async def loop(self, cache, interval: float = 1.0) -> None:
         self._running = True

@@ -83,6 +83,7 @@ async def lifespan(app: FastAPI):
     residents_api.init(_cache, _influx)
     alerts_api.init(store, _escalation, publisher)
     rooms_api.init(_cache)
+    staff_api.init(_cache)
     log.info("backend_ready",
              redis=settings.redis_url, influx=settings.influx_url, mqtt=settings.mqtt_host,
              demo_mode=settings.demo_mode)

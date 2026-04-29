@@ -5,6 +5,7 @@ interface State {
   residents: Map<string, ResidentSnapshot>;
   alerts: Map<string, Alert>;
   rooms: Map<string, RoomSnapshot>;
+  guards: Record<string, string>;   // wing → staff name
   connected: boolean;
   setResident: (snap: ResidentSnapshot) => void;
   setResidentBulk: (snaps: ResidentSnapshot[]) => void;
@@ -13,6 +14,8 @@ interface State {
   removeAlert: (id: string) => void;
   setRoom: (room: RoomSnapshot) => void;
   setRoomBulk: (rooms: RoomSnapshot[]) => void;
+  setGuard: (wing: string, name: string) => void;
+  setGuards: (guards: Record<string, string>) => void;
   setConnected: (ok: boolean) => void;
 }
 
@@ -20,6 +23,7 @@ export const useStore = create<State>((set) => ({
   residents: new Map(),
   alerts: new Map(),
   rooms: new Map(),
+  guards: { A: "Sophie Martin", B: "Marie Lambert" },
   connected: false,
   setResident: (snap) => set((s) => {
     const m = new Map(s.residents);
@@ -58,6 +62,8 @@ export const useStore = create<State>((set) => ({
     for (const r of rooms) m.set(r.room_id, r);
     return { rooms: m };
   }),
+  setGuard: (wing, name) => set((s) => ({ guards: { ...s.guards, [wing]: name } })),
+  setGuards: (guards) => set({ guards }),
   setConnected: (ok) => set({ connected: ok }),
 }));
 

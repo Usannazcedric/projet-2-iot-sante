@@ -34,6 +34,8 @@ export interface StaffMember {
   wing: string;
   shift: string;
   on_duty: boolean;
+  is_guard: boolean;
+  guard_wing: string | null;
 }
 
 export interface ActivityHour {
@@ -72,6 +74,13 @@ export const api = {
   resolveAlert: (id: string) => http<Alert>(`${API_BASE}/alerts/${id}/resolve`, { method: "POST" }),
   listRooms: () => http<RoomSnapshot[]>(`${API_BASE}/rooms`),
   listStaff: () => http<StaffMember[]>(`${API_BASE}/staff`),
+  getGuard: () => http<Record<string, string>>(`${API_BASE}/staff/guard`),
+  setGuard: (wing: string, name: string) =>
+    http<{ wing: string; guard: string }>(`${API_BASE}/staff/guard/${wing}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name }),
+    }),
   getActivityPattern: (id: string, hours = 24) =>
     http<{ resident_id: string; hours: number; data: ActivityHour[] }>(
       `${API_BASE}/residents/${id}/activity-pattern?hours=${hours}`,

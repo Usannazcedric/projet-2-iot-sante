@@ -13,21 +13,25 @@ export function useBootstrap() {
   const setConnected = useStore((s) => s.setConnected);
   const setRoom = useStore((s) => s.setRoom);
   const setRoomBulk = useStore((s) => s.setRoomBulk);
+  const setGuards = useStore((s) => s.setGuards);
+  const guards = useStore((s) => s.guards);
   const pushToast = useToasts((s) => s.push);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
-        const [residents, alerts, rooms] = await Promise.all([
+        const [residents, alerts, rooms, guardMap] = await Promise.all([
           api.listResidents(),
           api.listAlerts(),
           api.listRooms().catch(() => []),
+          api.getGuard().catch(() => ({} as Record<string, string>)),
         ]);
         if (cancelled) return;
         setResidentBulk(residents);
         setAlertBulk(alerts);
         setRoomBulk(rooms);
+        if (Object.keys(guardMap).length > 0) setGuards(guardMap);
       } catch (err) {
         console.error("bootstrap_failed", err);
       }
@@ -41,9 +45,14 @@ export function useBootstrap() {
         } else if (t === "alerts/new") {
           upsertAlert(env.data);
           if (env.data?.level >= 3) {
+            const room = parseInt((env.data.resident_id as string).slice(1));
+            const wing = room <= 110 ? "A" : "B";
+            const guard = useStore.getState().guards[wing];
             pushToast({
               title: `${LEVEL_LABELS[env.data.level] ?? "Alerte"} — ${env.data.resident_id}`,
-              description: env.data.reason,
+              description: guard
+                ? `${env.data.reason} · Notifié : ${guard}`
+                : env.data.reason,
               level: env.data.level,
             });
           }
@@ -64,5 +73,5 @@ export function useBootstrap() {
       cancelled = true;
       close();
     };
-  }, [setResidentBulk, setAlertBulk, setResident, upsertAlert, setConnected, pushToast, setRoom, setRoomBulk]);
+  }, [setResidentBulk, setAlertBulk, setResident, upsertAlert, setConnected, pushToast, setRoom, setRoomBulk, setGuards, guards]);
 }

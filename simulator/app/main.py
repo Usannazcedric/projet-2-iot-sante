@@ -58,6 +58,48 @@ _MOBILITY_PROBS = {
 }
 
 
+async def routine_loop(resident: Resident) -> None:
+    """Update resident.activity every 30s based on profile routine (wake/sleep/meals)."""
+    prof = resident.profile
+    try:
+        def _t(s: str) -> float:
+            h, m = s.split(":")
+            return int(h) + int(m) / 60.0
+        wake_h = _t(prof.routine.wake)
+        sleep_h = _t(prof.routine.sleep)
+        meals = [_t(m) for m in prof.routine.meals]
+    except Exception:
+        wake_h, sleep_h, meals = 7.0, 22.0, [8.0, 12.5, 19.0]
+
+    mob_weights = {
+        "autonomous": (0.35, 0.25),   # (walking_prob, sitting_prob, rest=idle)
+        "assisted":   (0.15, 0.35),
+        "wheelchair": (0.05, 0.55),
+        "bedridden":  (0.00, 0.10),
+    }
+    wp, sp = mob_weights.get(prof.mobility, (0.35, 0.25))
+
+    while True:
+        if getattr(resident, "_active_scenario", None) is None:
+            now = datetime.now(timezone.utc)
+            h = now.hour + now.minute / 60.0
+
+            if prof.mobility == "bedridden" or h < wake_h or h >= sleep_h:
+                resident.activity = "lying"
+            elif any(abs(h - m) < 0.5 for m in meals):
+                resident.activity = "sitting"
+            else:
+                r = random.random()
+                if r < wp:
+                    resident.activity = "walking"
+                elif r < wp + sp:
+                    resident.activity = "sitting"
+                else:
+                    resident.activity = "idle"
+
+        await asyncio.sleep(30.0)
+
+
 async def ambient_loop(resident: Resident) -> None:
     """Publish PIR and door events — randomised by time-of-day and mobility, independent of scenarios."""
     door_open = False
@@ -154,6 +196,7 @@ async def on_startup() -> None:
         _tasks.append(asyncio.create_task(vitals_loop(r)))
         _tasks.append(asyncio.create_task(motion_loop(r)))
         _tasks.append(asyncio.create_task(ambient_loop(r)))
+        _tasks.append(asyncio.create_task(routine_loop(r)))
     _tasks.append(asyncio.create_task(common_areas_loop()))
     log.info("simulator_ready", residents=len(_residents), demo_mode=settings.demo_mode)
 
