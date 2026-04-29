@@ -43,6 +43,13 @@ export function ResidentCard({ resident, level }: Props) {
           </div>
           <div className="flex items-center justify-between text-xs text-slate-500">
             <span>{m?.activity ?? "—"}</span>
+            {typeof resident.risk === "number" && (
+              <span className={`px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                resident.risk >= 0.6 ? "bg-orange-100 text-orange-700"
+                : resident.risk >= 0.3 ? "bg-yellow-100 text-yellow-800"
+                : "bg-slate-100 text-slate-600"
+              }`}>risk {(resident.risk * 100).toFixed(0)}</span>
+            )}
             <span>{fmtRelative(resident.last_seen)} ago</span>
           </div>
         </CardBody>

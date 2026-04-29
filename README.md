@@ -143,4 +143,37 @@ Routes:
 
 Live updates via WebSocket envelopes from ws-gateway. Initial state via REST.
 
+## ML Risk (sub-project 7 — landed)
+
+Hybrid risk score per resident, updated every 30 s.
+
+- **Anomaly**: one IsolationForest per resident, bootstrapped from synthetic 7-day vitals at first startup, persisted to the `models-data` volume as `<id>.joblib`.
+- **Trend**: slope of HR / SpO2 / temp over the latest 15-minute window from Redis (`ml:window:<id>`, LPUSH+LTRIM 900).
+- **Combined**: `risk = 0.6 * anomaly + 0.4 * trend`, written into `state:resident:<id>.risk`, published on `ehpad/risk/resident/<id>` (qos 0), audited in Influx (`risk` measurement).
+
+Verify it scores:
+
+```bash
+docker compose up -d --build
+sleep 90
+curl -fsS http://localhost:8000/residents/R001 | python3 -m json.tool | grep -i risk
+```
+
+Watch live risk envelopes via the gateway:
+
+```bash
+docker exec ehpad-mosquitto mosquitto_sub -h localhost -t 'ehpad/risk/#' -v
+```
+
+Trigger a degradation and watch the risk climb:
+
+```bash
+curl -fsS -X POST http://localhost:9100/scenario/R007 \
+  -H 'Content-Type: application/json' -d '{"name":"degradation"}'
+```
+
+Frontend: a risk pill on the grid card (yellow ≥ 0.3, orange ≥ 0.6) and a Risk gauge on the drill-down page.
+
+Risk freshness: 60 s TTL on the resident state. If the publisher loop falls behind, the alert engine falls back to threshold-only rules.
+
 See `docs/infra-quickstart.md` for troubleshooting.
