@@ -11,16 +11,17 @@ class Publisher:
                                   client_id=client_id)
         self.host = host
         self.port = port
+        self.loop = asyncio.get_event_loop()
         self.connected = asyncio.Event()
         self.client.on_connect = self._on_connect
         self.client.on_disconnect = self._on_disconnect
 
     def _on_connect(self, client, userdata, flags, reason_code, properties):
         if reason_code == 0:
-            asyncio.get_event_loop().call_soon_threadsafe(self.connected.set)
+            self.loop.call_soon_threadsafe(self.connected.set)
 
     def _on_disconnect(self, client, userdata, *args, **kwargs):
-        asyncio.get_event_loop().call_soon_threadsafe(self.connected.clear)
+        self.loop.call_soon_threadsafe(self.connected.clear)
 
     async def start(self) -> None:
         self.client.connect_async(self.host, self.port, keepalive=30)
