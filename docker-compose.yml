@@ -94,6 +94,7 @@ services:
       INFLUX_ORG: ehpad
       INFLUX_BUCKET: ehpad_vitals
       LOG_LEVEL: INFO
+      DEMO_MODE: "true"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]

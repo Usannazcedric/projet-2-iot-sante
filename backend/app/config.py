@@ -14,6 +14,7 @@ class Settings:
     influx_bucket: str
     api_port: int
     log_level: str
+    demo_mode: bool
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -27,4 +28,5 @@ class Settings:
             influx_bucket=os.getenv("INFLUX_BUCKET", "ehpad_vitals"),
             api_port=int(os.getenv("API_PORT", "8000")),
             log_level=os.getenv("LOG_LEVEL", "INFO"),
+            demo_mode=os.getenv("DEMO_MODE", "false").lower() in ("1", "true", "yes"),
         )

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from enum import IntEnum
 from typing import Any
 from pydantic import BaseModel, Field
 
@@ -46,3 +47,22 @@ class ResidentSnapshot(BaseModel):
     vitals: VitalsValues | None = None
     motion: MotionValues | None = None
     scenario: str | None = None
+
+
+class AlertLevel(IntEnum):
+    INFORMATION = 1
+    ATTENTION = 2
+    ALERTE = 3
+    URGENCE = 4
+    DANGER_VITAL = 5
+
+
+class Alert(BaseModel):
+    id: str
+    resident_id: str
+    level: int  # 1..5
+    reason: str
+    status: str = "active"  # active | acknowledged | resolved
+    created_at: str
+    updated_at: str
+    last_seen: str

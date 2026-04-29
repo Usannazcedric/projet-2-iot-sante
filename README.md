@@ -71,4 +71,33 @@ Endpoints:
 - `GET /residents/{id}` — single resident snapshot.
 - `GET /residents/{id}/history?metric=vitals&minutes=15` — Influx-backed time-series.
 
+## Alert Engine (sub-project 4 — landed)
+
+5-level alert engine with auto-escalation. Threshold rules over the latest resident state. Sticky alerts (only escalate, never downgrade). DEMO_MODE compresses escalation deadlines (L2→L3 in 60 s instead of 10 min).
+
+```bash
+# Inject a fall — produces L4 within ~2 s
+curl -fsS -X POST http://localhost:9100/scenario/R007 \
+  -H 'Content-Type: application/json' -d '{"name":"fall"}'
+sleep 3
+curl -fsS http://localhost:8000/alerts | python3 -m json.tool
+
+# Acknowledge an alert
+curl -fsS -X POST http://localhost:8000/alerts/<id>/ack
+
+# Resolve an alert
+curl -fsS -X POST http://localhost:8000/alerts/<id>/resolve
+```
+
+Endpoints:
+
+- `GET /alerts` — list active alerts
+- `POST /alerts/{id}/ack` — acknowledge (cancels escalation timer)
+- `POST /alerts/{id}/resolve` — resolve (removes from active set)
+
+MQTT topics:
+
+- `ehpad/alerts/new` — new alert payload (QoS 1)
+- `ehpad/alerts/update/{id}` — status / level change (QoS 1)
+
 See `docs/infra-quickstart.md` for troubleshooting.
