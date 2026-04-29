@@ -44,6 +44,18 @@ class InfluxWriter:
         )
         await asyncio.to_thread(self._write.write, bucket=self.bucket, org=self.org, record=p)
 
+    async def write_alert(self, alert_id: str, resident_id: str, level: int, status: str, reason: str, ts: str) -> None:
+        p = (
+            Point("alerts")
+            .tag("resident_id", resident_id)
+            .tag("alert_id", alert_id)
+            .tag("status", status)
+            .field("level", int(level))
+            .field("reason", str(reason))
+            .time(ts)
+        )
+        await asyncio.to_thread(self._write.write, bucket=self.bucket, org=self.org, record=p)
+
     async def query_history(self, resident_id: str, metric: str, from_iso: str, to_iso: str) -> list[dict[str, Any]]:
         qa = self._client.query_api()
         flux = (
