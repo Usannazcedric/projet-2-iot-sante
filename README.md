@@ -53,4 +53,22 @@ docker exec ehpad-mosquitto mosquitto_sub -h localhost -t 'ehpad/vitals/resident
 
 `DEMO_MODE=true` (default in compose) compresses scenario timings.
 
+## Backend (sub-project 3 — landed)
+
+Subscribes to MQTT sensor topics, caches latest state in Redis, persists history in InfluxDB, exposes a read-only REST API.
+
+```bash
+docker compose up -d --build backend
+curl -fsS http://localhost:8000/health
+curl -fsS http://localhost:8000/residents | python3 -m json.tool | head -40
+curl -fsS "http://localhost:8000/residents/R001/history?metric=vitals&minutes=5" | python3 -m json.tool | head -20
+```
+
+Endpoints:
+
+- `GET /health` — 200 once Redis + Influx + MQTT connected.
+- `GET /residents` — list of last-state snapshots.
+- `GET /residents/{id}` — single resident snapshot.
+- `GET /residents/{id}/history?metric=vitals&minutes=15` — Influx-backed time-series.
+
 See `docs/infra-quickstart.md` for troubleshooting.
