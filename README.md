@@ -100,4 +100,30 @@ MQTT topics:
 - `ehpad/alerts/new` — new alert payload (QoS 1)
 - `ehpad/alerts/update/{id}` — status / level change (QoS 1)
 
+## WebSocket Gateway (sub-project 5 — landed)
+
+Node bridge that subscribes MQTT and broadcasts envelopes to WebSocket clients.
+
+```bash
+docker compose up -d --build ws-gateway
+curl -fsS http://localhost:8080/health
+```
+
+Connect a client:
+
+```bash
+python3 - <<'EOF'
+import asyncio, json, websockets
+async def main():
+    async with websockets.connect("ws://localhost:8080/ws") as ws:
+        for _ in range(10):
+            print(json.loads(await ws.recv()))
+asyncio.run(main())
+EOF
+```
+
+Envelope format: `{ "topic": "alerts/new", "data": { ... } }`. Topic strips the `ehpad/` prefix.
+
+Subscribed MQTT patterns: `ehpad/alerts/#`, `ehpad/state/#`, `ehpad/risk/+`.
+
 See `docs/infra-quickstart.md` for troubleshooting.
