@@ -44,6 +44,17 @@ class InfluxWriter:
         )
         await asyncio.to_thread(self._write.write, bucket=self.bucket, org=self.org, record=p)
 
+    async def write_risk(self, resident_id: str, ts: str, anomaly: float, trend: float, combined: float) -> None:
+        p = (
+            Point("risk")
+            .tag("resident_id", resident_id)
+            .field("anomaly", float(anomaly))
+            .field("trend", float(trend))
+            .field("combined", float(combined))
+            .time(ts)
+        )
+        await asyncio.to_thread(self._write.write, bucket=self.bucket, org=self.org, record=p)
+
     async def write_alert(self, alert_id: str, resident_id: str, level: int, status: str, reason: str, ts: str) -> None:
         p = (
             Point("alerts")

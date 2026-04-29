@@ -12,6 +12,7 @@ dependencies = [
   "pydantic>=2.6",
   "structlog>=24.1",
   "numpy>=1.26",
+  "scikit-learn>=1.4",
 ]
 
 [project.optional-dependencies]

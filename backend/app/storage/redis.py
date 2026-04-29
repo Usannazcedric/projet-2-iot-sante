@@ -7,6 +7,8 @@ import redis.asyncio as aioredis
 STATE_TTL_SECONDS = 60
 RESIDENT_KEY = "state:resident:{id}"
 RESIDENT_PATTERN = "state:resident:*"
+ML_WINDOW_KEY = "ml:window:{id}"
+ML_WINDOW_MAX = 900  # 15 min @ 1 Hz
 
 
 class RedisCache:
@@ -43,6 +45,18 @@ class RedisCache:
         current.update(partial)
         await self.set_resident_state(resident_id, current)
         return current
+
+    async def push_ml_window(self, resident_id: str, sample: dict[str, Any]) -> None:
+        key = ML_WINDOW_KEY.format(id=resident_id)
+        pipe = self.client.pipeline()
+        pipe.lpush(key, json.dumps(sample))
+        pipe.ltrim(key, 0, ML_WINDOW_MAX - 1)
+        await pipe.execute()
+
+    async def get_ml_window(self, resident_id: str, limit: int = ML_WINDOW_MAX) -> list[dict[str, Any]]:
+        key = ML_WINDOW_KEY.format(id=resident_id)
+        raw = await self.client.lrange(key, 0, max(0, limit - 1))
+        return [json.loads(r) for r in raw]
 
     async def close(self) -> None:
         await self.client.aclose()

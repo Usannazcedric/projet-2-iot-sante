@@ -66,6 +66,9 @@ export function ResidentDetail() {
             <VitalGauge label="Sys" value={v?.sys} unit="mmHg" />
             <VitalGauge label="Dia" value={v?.dia} unit="mmHg" />
             <VitalGauge label="Activity" value={undefined} unit={m?.activity ?? "—"} />
+            <VitalGauge label="Risk" value={typeof resident.risk === "number" ? Math.round(resident.risk * 100) : null} unit="%"
+              warn={(x) => x >= 30}
+              crit={(x) => x >= 60} />
           </CardBody>
         </Card>
 

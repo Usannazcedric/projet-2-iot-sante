@@ -30,6 +30,7 @@ async def _handle_vitals(data: dict[str, Any], cache: RedisCache, influx: Any, p
         "last_seen": payload.timestamp,
         "vitals": payload.values.model_dump(),
     })
+    await cache.push_ml_window(payload.resident_id, payload.values.model_dump())
     await influx.write_vitals(payload.resident_id, payload.timestamp, payload.values.model_dump())
     if publisher is not None:
         try:

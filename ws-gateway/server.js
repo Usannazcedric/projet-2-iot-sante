@@ -11,7 +11,7 @@ const WS_PORT = parseInt(process.env.WS_PORT || "8080", 10);
 const SUBSCRIBE_TOPICS = [
   "ehpad/alerts/#",
   "ehpad/state/#",
-  "ehpad/risk/+",
+  "ehpad/risk/#",
 ];
 
 let mqttConnected = false;

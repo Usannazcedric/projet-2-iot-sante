@@ -15,6 +15,7 @@ class Settings:
     api_port: int
     log_level: str
     demo_mode: bool
+    models_dir: str
 
     @classmethod
     def from_env(cls) -> "Settings":
@@ -29,4 +30,5 @@ class Settings:
             api_port=int(os.getenv("API_PORT", "8000")),
             log_level=os.getenv("LOG_LEVEL", "INFO"),
             demo_mode=os.getenv("DEMO_MODE", "false").lower() in ("1", "true", "yes"),
+            models_dir=os.getenv("MODELS_DIR", "/models"),
         )
