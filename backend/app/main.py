@@ -15,6 +15,8 @@ from .alerts.store import AlertStore
 from .alerts.engine import AlertEngine
 from .alerts.escalation import EscalationManager
 from .alerts.publisher import AlertPublisher
+from .ml.bootstrap import train_model
+from .ml.risk import RiskPublisher
 
 
 settings = Settings.from_env()
@@ -30,6 +32,8 @@ _mqtt: MqttClient | None = None
 _engine: AlertEngine | None = None
 _engine_task: asyncio.Task | None = None
 _escalation: EscalationManager | None = None
+_risk_publisher: RiskPublisher | None = None
+_risk_task: asyncio.Task | None = None
 
 
 async def _dispatch(family: str, key: str, payload: bytes) -> None:
@@ -39,7 +43,7 @@ async def _dispatch(family: str, key: str, payload: bytes) -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    global _cache, _influx, _mqtt, _engine, _engine_task, _escalation
+    global _cache, _influx, _mqtt, _engine, _engine_task, _escalation, _risk_publisher, _risk_task
     _cache = await RedisCache.from_url(settings.redis_url)
     _influx = InfluxWriter(
         url=settings.influx_url,
@@ -55,6 +59,23 @@ async def lifespan(app: FastAPI):
     _escalation = EscalationManager(demo_mode=settings.demo_mode)
     _engine = AlertEngine(store=store, publisher=publisher, escalation=_escalation)
     _engine_task = asyncio.create_task(_engine.loop(_cache, interval=1.0))
+
+    def _bootstrap_all_models():
+        rids = [f"R{n:03d}" for n in range(1, 21)]
+        for rid in rids:
+            train_model(rid, settings.models_dir, days=7, force=False)
+
+    await asyncio.to_thread(_bootstrap_all_models)
+    log.info("ml_bootstrap_done", models_dir=settings.models_dir)
+
+    _risk_publisher = RiskPublisher(
+        cache=_cache,
+        mqtt=_mqtt,
+        influx=_influx,
+        models_dir=settings.models_dir,
+        interval=30.0,
+    )
+    _risk_task = asyncio.create_task(_risk_publisher.loop())
 
     health_api.init(_cache, _mqtt.connected, _influx)
     residents_api.init(_cache, _influx)
@@ -75,6 +96,14 @@ async def lifespan(app: FastAPI):
                 pass
         if _escalation is not None:
             _escalation.cancel_all()
+        if _risk_publisher is not None:
+            _risk_publisher.stop()
+        if _risk_task is not None:
+            _risk_task.cancel()
+            try:
+                await _risk_task
+            except (asyncio.CancelledError, Exception):
+                pass
         if _mqtt is not None:
             await _mqtt.stop()
         if _influx is not None:

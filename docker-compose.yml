@@ -95,6 +95,9 @@ services:
       INFLUX_BUCKET: ehpad_vitals
       LOG_LEVEL: INFO
       DEMO_MODE: "true"
+      MODELS_DIR: /models
+    volumes:
+      - models-data:/models
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8000/health"]
@@ -143,3 +146,4 @@ volumes:
   mosquitto-data:
   redis-data:
   influx-data:
+  models-data:
