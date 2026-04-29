@@ -1,8 +1,8 @@
 # Build stage
 FROM node:20-slim AS builder
 WORKDIR /app
-COPY package.json /app/package.json
-RUN npm install --no-audit --no-fund
+COPY package.json package-lock.json /app/
+RUN npm ci --no-audit --no-fund
 COPY tsconfig.json vite.config.ts tailwind.config.js postcss.config.js index.html /app/
 COPY src /app/src
 RUN npm run build
