@@ -52,3 +52,7 @@ class MqttClient:
     async def stop(self) -> None:
         self.client.loop_stop()
         self.client.disconnect()
+
+    def publish(self, topic: str, payload: bytes | str, qos: int = 1) -> None:
+        """Publish a retained-friendly message. Safe from any thread."""
+        self.client.publish(topic, payload=payload, qos=qos)
