@@ -126,4 +126,21 @@ Envelope format: `{ "topic": "alerts/new", "data": { ... } }`. Topic strips the 
 
 Subscribed MQTT patterns: `ehpad/alerts/#`, `ehpad/state/#`, `ehpad/risk/+`.
 
+## Frontend (sub-project 6 — landed)
+
+React + Vite + TypeScript + Tailwind dashboard. Same-origin via nginx; reverse-proxies `/api`, `/sim`, `/ws` so the browser never touches CORS.
+
+```bash
+docker compose up -d --build
+open http://localhost:3000
+```
+
+Routes:
+
+- `/` — grid of 20 residents (sorted by alert level desc, then id)
+- `/resident/:id` — drill-down with vitals, recharts time-series, active alerts (Ack/Resolve), scenario controls
+- `/alerts` — alert log with level filter and Ack/Resolve actions
+
+Live updates via WebSocket envelopes from ws-gateway. Initial state via REST.
+
 See `docs/infra-quickstart.md` for troubleshooting.

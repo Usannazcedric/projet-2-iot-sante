@@ -122,6 +122,23 @@ services:
       retries: 10
       start_period: 10s
 
+  frontend:
+    build: ./frontend
+    container_name: ehpad-frontend
+    ports:
+      - "3000:80"
+    depends_on:
+      backend: { condition: service_healthy }
+      ws-gateway: { condition: service_healthy }
+      simulator: { condition: service_healthy }
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "-", "http://127.0.0.1/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 15s
+
 volumes:
   mosquitto-data:
   redis-data:
