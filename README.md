@@ -14,10 +14,12 @@ You should see three services healthy: `mosquitto`, `redis`, `influxdb`.
 Smoke checks:
 
 ```bash
-docker exec -it $(docker compose ps -q mosquitto) mosquitto_sub -h localhost -t 'ehpad/test' -C 1 -W 5 &
-docker exec -it $(docker compose ps -q mosquitto) mosquitto_pub -h localhost -t 'ehpad/test' -m 'hello'
-docker exec -it $(docker compose ps -q redis) redis-cli ping        # → PONG
-docker exec -it $(docker compose ps -q influxdb) influx ping        # → OK
+docker exec ehpad-mosquitto mosquitto_sub -h localhost -t 'ehpad/test' -C 1 -W 5 &
+sleep 1
+docker exec ehpad-mosquitto mosquitto_pub -h localhost -t 'ehpad/test' -m 'hello'
+wait
+docker exec ehpad-redis redis-cli ping        # → PONG
+docker exec ehpad-influxdb influx ping        # → OK
 ```
 
 Stop everything:
