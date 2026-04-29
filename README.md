@@ -1,8 +1,56 @@
 # Projet 2 — EHPAD Health Monitoring (IoT/IA)
 
-Real-time monitoring system for 20+ residents in an EHPAD. See the design spec at `docs/superpowers/specs/2026-04-29-ehpad-monitoring-design.md`.
+Real-time monitoring for 20 EHPAD residents. Live MQTT ingest, hybrid ML risk scoring (IsolationForest + trend slope), 5-level alerts with auto-escalation, React dashboard.
 
-## Quickstart (infra only — current state)
+**Stack:** Python FastAPI + asyncio simulator, Node WebSocket gateway, React + Vite + TS + Tailwind front, Mosquitto, Redis, InfluxDB, scikit-learn. Everything runs as one `docker compose up`.
+
+## Demo in 60 seconds
+
+```bash
+docker compose up -d --build
+# wait for 7 services healthy, then open the dashboard
+until [ "$(docker compose ps --format '{{.State}} {{.Health}}' | grep -c 'running healthy')" = "7" ]; do sleep 3; done
+open http://localhost:3000
+```
+
+Trigger a slow degradation; ML predicts before any threshold is crossed:
+
+```bash
+curl -fsS -X POST http://localhost:3000/sim/scenario/R007 \
+  -H 'Content-Type: application/json' -d '{"name":"degradation"}'
+```
+
+Trigger an acute fall:
+
+```bash
+curl -fsS -X POST http://localhost:3000/sim/scenario/R012 \
+  -H 'Content-Type: application/json' -d '{"name":"fall"}'
+```
+
+## Documentation
+
+- **`docs/architecture.md`** — service map, data flow, tech choices.
+- **`docs/api.md`** — REST + MQTT + WebSocket reference.
+- **`docs/demo.md`** — 8-minute demo script.
+- **`docs/infra-quickstart.md`** — troubleshooting for the infra layer.
+- **`docs/superpowers/specs/2026-04-29-ehpad-monitoring-design.md`** — original design spec.
+- **`docs/superpowers/plans/`** — per-sub-project implementation plans.
+
+## Tests
+
+```bash
+cd backend && python -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+pytest -q                       # 59 tests, ~2 s
+```
+
+---
+
+## Sub-project history (build order)
+
+The system was built incrementally. Each step shipped as its own tag.
+
+## Infra (sub-project 1 — landed, tag `infra-v0.1`)
 
 ```bash
 docker compose up -d
@@ -20,12 +68,6 @@ docker exec ehpad-mosquitto mosquitto_pub -h localhost -t 'ehpad/test' -m 'hello
 wait
 docker exec ehpad-redis redis-cli ping        # → PONG
 docker exec ehpad-influxdb influx ping        # → OK
-```
-
-Stop everything:
-
-```bash
-docker compose down
 ```
 
 ## Simulator (sub-project 2 — landed)
