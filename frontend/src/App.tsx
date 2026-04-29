@@ -3,6 +3,7 @@ import { useBootstrap } from "@/hooks/useBootstrap";
 import { NavBar } from "@/components/NavBar";
 import { AlertToast } from "@/components/AlertToast";
 import { GridPage } from "@/pages/Grid";
+import { ResidentDetail } from "@/pages/ResidentDetail";
 
 export default function App() {
   useBootstrap();
@@ -12,6 +13,7 @@ export default function App() {
       <main>
         <Routes>
           <Route path="/" element={<GridPage />} />
+          <Route path="/resident/:id" element={<ResidentDetail />} />
           <Route path="*" element={<div className="p-8 text-slate-500">Not found</div>} />
         </Routes>
       </main>
