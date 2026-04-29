@@ -1,221 +1,210 @@
-# Projet 2 — EHPAD Health Monitoring (IoT/IA)
+# Projet 2 — Monitoring EHPAD (IoT / IA)
 
-Real-time monitoring for 20 EHPAD residents. Live MQTT ingest, hybrid ML risk scoring (IsolationForest + trend slope), 5-level alerts with auto-escalation, React dashboard.
+Plateforme de surveillance temps réel de 20 résidents en EHPAD. Capteurs simulés (constantes vitales, mouvement, ambiance), ingestion MQTT, scoring ML hybride (anomaly + tendance), moteur d'alertes 5 niveaux avec auto-escalade, détection de fugue, résumé quotidien généré par LLM local, et tableau de bord React temps réel.
 
-**Stack:** Python FastAPI + asyncio simulator, Node WebSocket gateway, React + Vite + TS + Tailwind front, Mosquitto, Redis, InfluxDB, scikit-learn. Everything runs as one `docker compose up`.
+L'ensemble s'exécute via un seul `docker compose up -d --build`.
 
-## Demo in 60 seconds
+---
+
+## Démarrage rapide
 
 ```bash
+git clone https://github.com/Usannazcedric/projet-2-iot-sante.git
+cd projet-2-iot-sante
 docker compose up -d --build
-# wait for 7 services healthy, then open the dashboard
-until [ "$(docker compose ps --format '{{.State}} {{.Health}}' | grep -c 'running healthy')" = "7" ]; do sleep 3; done
-open http://localhost:3000
 ```
 
-Trigger a slow degradation; ML predicts before any threshold is crossed:
+Attendre que les services soient `healthy` (~30 s, plus le pull du modèle Ollama ~2 GB au premier démarrage). Puis ouvrir :
+
+- **Dashboard** : http://localhost:3000
+- API backend : http://localhost:8000/health
+- API simulator : http://localhost:9100/health
+- WebSocket gateway : http://localhost:8080/health
+- Ollama (LLM local) : http://localhost:11434
+
+Vérifier l'état :
 
 ```bash
-curl -fsS -X POST http://localhost:3000/sim/scenario/R007 \
-  -H 'Content-Type: application/json' -d '{"name":"degradation"}'
-```
-
-Trigger an acute fall:
-
-```bash
-curl -fsS -X POST http://localhost:3000/sim/scenario/R012 \
-  -H 'Content-Type: application/json' -d '{"name":"fall"}'
-```
-
-## Documentation
-
-- **`docs/architecture.md`** — service map, data flow, tech choices.
-- **`docs/api.md`** — REST + MQTT + WebSocket reference.
-- **`docs/demo.md`** — 8-minute demo script.
-- **`docs/infra-quickstart.md`** — troubleshooting for the infra layer.
-- **`docs/superpowers/specs/2026-04-29-ehpad-monitoring-design.md`** — original design spec.
-- **`docs/superpowers/plans/`** — per-sub-project implementation plans.
-
-## Tests
-
-```bash
-cd backend && python -m venv .venv && source .venv/bin/activate
-pip install -e ".[dev]"
-pytest -q                       # 59 tests, ~2 s
+docker compose ps
 ```
 
 ---
 
-## Sub-project history (build order)
+## Stack technique
 
-The system was built incrementally. Each step shipped as its own tag.
+| Couche | Technologie |
+| --- | --- |
+| Simulateur capteurs | Python 3.11, FastAPI, asyncio, NumPy |
+| Ingestion temps réel | MQTT (Eclipse Mosquitto 2) |
+| Backend API + moteur d'alertes | Python 3.11, FastAPI, Pydantic v2, asyncio |
+| Cache d'état temps réel | Redis 7 |
+| Historique time-series | InfluxDB 2.7 |
+| Machine Learning | scikit-learn (IsolationForest), NumPy |
+| Pont WebSocket | Node 20, `ws`, `mqtt` |
+| Frontend | React 18, Vite, TypeScript, Tailwind, Zustand, Recharts |
+| LLM local (résumés) | Ollama (llama3.2:3b par défaut) |
+| Orchestration | Docker Compose |
 
-## Infra (sub-project 1 — landed, tag `infra-v0.1`)
+---
 
+## Fonctionnalités
+
+### Cœur (sprints 1–7)
+- **Simulateur** : 20 profils résidents, scénarios injectables (chute, cardiaque, errance, dégradation lente), publication MQTT à 1 Hz (vitals) / 5 Hz (motion) / 0,2 Hz (ambient).
+- **Backend** : ingestion MQTT, cache Redis (TTL 60 s), historique Influx, API REST documentée.
+- **Moteur d'alertes** : 5 niveaux (Information → Danger vital), règles seuils + score ML, auto-escalade L2→L3→L4→L5 si non-acquittée. Sticky : descend pas, monte seulement.
+- **ML hybride** : un IsolationForest par résident (entraîné au boot sur 7 jours synthétiques) + pente HR/SpO2/temp sur 15 min → `risk = 0.6 × anomaly + 0.4 × trend`. Mis à jour toutes les 30 s.
+- **WebSocket gateway** : pont MQTT ↔ WebSocket pour pousser alertes/états/risques au front sans CORS.
+- **Frontend** : grille des 20 résidents (triée par niveau d'alerte), page détaillée avec graphiques temps réel, journal d'alertes, plan de l'EHPAD avec mouvements, gestion du personnel et planning.
+
+### Bonus (livraison finale)
+- **C1 — Détection de fugue** : alerte L4 URGENCE quand un résident sort de sa chambre dans des conditions à risque. Deux paths :
+  1. Pathologie cognitive (Alzheimer / démence) + porte ouverte + activité `walking` (détection organique).
+  2. Scénario `fugue` injecté manuellement + porte ouverte (déclenchement explicite, indépendant du profil).
+- **C2 — Résumé LLM quotidien** : endpoint `GET /residents/{id}/summary` qui agrège constantes, activité et alertes des 24 dernières heures, et produit un rapport markdown structuré (Synthèse / Constantes / Activité / Alertes / Recommandations) via le LLM Ollama local. Repli automatique sur un template déterministe si Ollama indisponible.
+
+---
+
+## Comment tester
+
+### Voir une chute (alerte L4)
 ```bash
-docker compose up -d
-docker compose ps
-```
-
-You should see three services healthy: `mosquitto`, `redis`, `influxdb`.
-
-Smoke checks:
-
-```bash
-docker exec ehpad-mosquitto mosquitto_sub -h localhost -t 'ehpad/test' -C 1 -W 5 &
-sleep 1
-docker exec ehpad-mosquitto mosquitto_pub -h localhost -t 'ehpad/test' -m 'hello'
-wait
-docker exec ehpad-redis redis-cli ping        # → PONG
-docker exec ehpad-influxdb influx ping        # → OK
-```
-
-## Simulator (sub-project 2 — landed)
-
-The simulator publishes synthetic vitals + motion + ambient data for 20 residents at 1 Hz / 5 Hz over MQTT.
-
-```bash
-docker compose up -d --build
-curl -fsS http://localhost:9100/health
-curl -fsS http://localhost:9100/residents | python3 -m json.tool | head -40
-```
-
-Inject a scenario (fall, cardiac, degradation, wandering, normal):
-
-```bash
-curl -fsS -X POST http://localhost:9100/scenario/R007 \
-  -H 'Content-Type: application/json' -d '{"name":"degradation"}'
-```
-
-Watch the live MQTT stream for any resident:
-
-```bash
-docker exec ehpad-mosquitto mosquitto_sub -h localhost -t 'ehpad/vitals/resident/+' -v
-```
-
-`DEMO_MODE=true` (default in compose) compresses scenario timings.
-
-## Backend (sub-project 3 — landed)
-
-Subscribes to MQTT sensor topics, caches latest state in Redis, persists history in InfluxDB, exposes a read-only REST API.
-
-```bash
-docker compose up -d --build backend
-curl -fsS http://localhost:8000/health
-curl -fsS http://localhost:8000/residents | python3 -m json.tool | head -40
-curl -fsS "http://localhost:8000/residents/R001/history?metric=vitals&minutes=5" | python3 -m json.tool | head -20
-```
-
-Endpoints:
-
-- `GET /health` — 200 once Redis + Influx + MQTT connected.
-- `GET /residents` — list of last-state snapshots.
-- `GET /residents/{id}` — single resident snapshot.
-- `GET /residents/{id}/history?metric=vitals&minutes=15` — Influx-backed time-series.
-
-## Alert Engine (sub-project 4 — landed)
-
-5-level alert engine with auto-escalation. Threshold rules over the latest resident state. Sticky alerts (only escalate, never downgrade). DEMO_MODE compresses escalation deadlines (L2→L3 in 60 s instead of 10 min).
-
-```bash
-# Inject a fall — produces L4 within ~2 s
-curl -fsS -X POST http://localhost:9100/scenario/R007 \
+curl -X POST http://localhost:9100/scenario/R007 \
   -H 'Content-Type: application/json' -d '{"name":"fall"}'
-sleep 3
-curl -fsS http://localhost:8000/alerts | python3 -m json.tool
-
-# Acknowledge an alert
-curl -fsS -X POST http://localhost:8000/alerts/<id>/ack
-
-# Resolve an alert
-curl -fsS -X POST http://localhost:8000/alerts/<id>/resolve
 ```
+Toast en haut à droite + badge dans NavBar + entrée dans `/alerts`.
 
-Endpoints:
-
-- `GET /alerts` — list active alerts
-- `POST /alerts/{id}/ack` — acknowledge (cancels escalation timer)
-- `POST /alerts/{id}/resolve` — resolve (removes from active set)
-
-MQTT topics:
-
-- `ehpad/alerts/new` — new alert payload (QoS 1)
-- `ehpad/alerts/update/{id}` — status / level change (QoS 1)
-
-## WebSocket Gateway (sub-project 5 — landed)
-
-Node bridge that subscribes MQTT and broadcasts envelopes to WebSocket clients.
-
+### Voir une dégradation lente (ML prédit avant les seuils)
 ```bash
-docker compose up -d --build ws-gateway
-curl -fsS http://localhost:8080/health
-```
-
-Connect a client:
-
-```bash
-python3 - <<'EOF'
-import asyncio, json, websockets
-async def main():
-    async with websockets.connect("ws://localhost:8080/ws") as ws:
-        for _ in range(10):
-            print(json.loads(await ws.recv()))
-asyncio.run(main())
-EOF
-```
-
-Envelope format: `{ "topic": "alerts/new", "data": { ... } }`. Topic strips the `ehpad/` prefix.
-
-Subscribed MQTT patterns: `ehpad/alerts/#`, `ehpad/state/#`, `ehpad/risk/+`.
-
-## Frontend (sub-project 6 — landed)
-
-React + Vite + TypeScript + Tailwind dashboard. Same-origin via nginx; reverse-proxies `/api`, `/sim`, `/ws` so the browser never touches CORS.
-
-```bash
-docker compose up -d --build
-open http://localhost:3000
-```
-
-Routes:
-
-- `/` — grid of 20 residents (sorted by alert level desc, then id)
-- `/resident/:id` — drill-down with vitals, recharts time-series, active alerts (Ack/Resolve), scenario controls
-- `/alerts` — alert log with level filter and Ack/Resolve actions
-
-Live updates via WebSocket envelopes from ws-gateway. Initial state via REST.
-
-## ML Risk (sub-project 7 — landed)
-
-Hybrid risk score per resident, updated every 30 s.
-
-- **Anomaly**: one IsolationForest per resident, bootstrapped from synthetic 7-day vitals at first startup, persisted to the `models-data` volume as `<id>.joblib`.
-- **Trend**: slope of HR / SpO2 / temp over the latest 15-minute window from Redis (`ml:window:<id>`, LPUSH+LTRIM 900).
-- **Combined**: `risk = 0.6 * anomaly + 0.4 * trend`, written into `state:resident:<id>.risk`, published on `ehpad/risk/resident/<id>` (qos 0), audited in Influx (`risk` measurement).
-
-Verify it scores:
-
-```bash
-docker compose up -d --build
-sleep 90
-curl -fsS http://localhost:8000/residents/R001 | python3 -m json.tool | grep -i risk
-```
-
-Watch live risk envelopes via the gateway:
-
-```bash
-docker exec ehpad-mosquitto mosquitto_sub -h localhost -t 'ehpad/risk/#' -v
-```
-
-Trigger a degradation and watch the risk climb:
-
-```bash
-curl -fsS -X POST http://localhost:9100/scenario/R007 \
+curl -X POST http://localhost:9100/scenario/R007 \
   -H 'Content-Type: application/json' -d '{"name":"degradation"}'
 ```
+Le score de risque monte, l'alerte arrive avant que les seuils HR/SpO2 ne soient franchis.
 
-Frontend: a risk pill on the grid card (yellow ≥ 0.3, orange ≥ 0.6) and a Risk gauge on the drill-down page.
+### Voir une fugue (bonus C1)
+1. Ouvrir n'importe quel résident dans le dashboard.
+2. Bas de page → carte « Simulation de scénarios » → cliquer **Sortie / Fugue**.
+3. ~5 s plus tard : toast top-right « Urgence — fugue détectée ».
 
-Risk freshness: 60 s TTL on the resident state. If the publisher loop falls behind, the alert engine falls back to threshold-only rules.
+Ou en CLI :
+```bash
+curl -X POST http://localhost:9100/scenario/R002 \
+  -H 'Content-Type: application/json' -d '{"name":"fugue"}'
+```
 
-See `docs/infra-quickstart.md` for troubleshooting.
+### Générer un rapport quotidien (bonus C2)
+1. Ouvrir un résident.
+2. Carte « Rapport quotidien » → bouton **Générer**.
+3. Premier appel ~2 min (cold-start LLM), suivants <30 s.
+
+---
+
+## Endpoints API principaux
+
+### Backend (port 8000)
+| Méthode | Route | Description |
+| --- | --- | --- |
+| GET | `/health` | Statut des dépendances (Redis, Influx, MQTT) |
+| GET | `/residents` | Snapshots des 20 résidents |
+| GET | `/residents/{id}` | Détail d'un résident |
+| GET | `/residents/{id}/history?metric=vitals&minutes=15` | Time-series Influx |
+| GET | `/residents/{id}/activity-pattern?hours=24` | Répartition horaire des activités |
+| GET | `/residents/{id}/summary?hours=24` | **Rapport LLM** (bonus C2) |
+| GET | `/alerts` | Alertes actives |
+| POST | `/alerts/{id}/ack` | Acquitter |
+| POST | `/alerts/{id}/resolve` | Résoudre |
+| GET | `/rooms` | États des chambres (PIR + porte) |
+| GET | `/staff` | Personnel + assignation |
+
+### Simulator (port 9100)
+| Méthode | Route | Description |
+| --- | --- | --- |
+| GET | `/health` | Statut |
+| GET | `/residents` | Profils complets |
+| POST | `/scenario/{id}` body `{"name":"fall\|cardiac\|wandering\|degradation\|fugue\|normal"}` | Injecter un scénario |
+
+### WebSocket (port 8080)
+- `ws://localhost:8080/ws` — broadcast d'enveloppes `{ topic, data }`.
+- Topics : `state/resident/{id}`, `state/room/{id}`, `alerts/new`, `alerts/update/{id}`, `risk/resident/{id}`.
+
+---
+
+## Variables d'environnement
+
+| Variable | Service | Défaut | Rôle |
+| --- | --- | --- | --- |
+| `DEMO_MODE` | backend, simulator | `true` | Compresse les délais d'escalade (10 min → 60 s) |
+| `MQTT_HOST` | tous | `mosquitto` | Hôte MQTT |
+| `REDIS_URL` | backend | `redis://redis:6379` | URL Redis |
+| `INFLUX_URL` | backend | `http://influxdb:8086` | URL Influx |
+| `INFLUX_TOKEN` | backend | `ehpad-token-dev` | Token Influx (dev only) |
+| `MODELS_DIR` | backend | `/models` | Persistance des modèles ML |
+| `OLLAMA_URL` | backend | `http://ollama:11434` | URL Ollama |
+| `OLLAMA_MODEL` | backend, ollama-init | `llama3.2:3b` | Modèle LLM utilisé |
+| `RESIDENT_COUNT` | simulator | `20` | Nombre de résidents |
+
+---
+
+## Structure du projet
+
+```
+.
+├── backend/              # FastAPI + moteur d'alertes + ML + LLM
+│   ├── app/
+│   │   ├── alerts/       # rules.py, fugue.py, engine.py, escalation.py
+│   │   ├── api/          # routes HTTP
+│   │   ├── ingest/       # client MQTT + handlers
+│   │   ├── ml/           # IsolationForest + trend + risk publisher
+│   │   ├── storage/      # Redis + Influx
+│   │   ├── profiles.py   # registre statique des résidents
+│   │   └── summary.py    # générateur de rapport LLM (bonus C2)
+│   └── tests/            # 60+ tests pytest
+├── simulator/            # FastAPI + asyncio publisher MQTT
+│   └── app/
+│       ├── scenarios.py  # Normal, Fall, Cardiac, Wandering, Degradation, Fugue
+│       └── sensors/      # vitals, motion, ambient
+├── ws-gateway/           # Node bridge MQTT ↔ WebSocket
+├── frontend/             # React + Vite + TS + Tailwind
+│   └── src/
+│       ├── pages/        # Grid, ResidentDetail, AlertLog, Movements, Staff
+│       ├── components/   # NavBar, AlertToast, FloorPlan, …
+│       ├── hooks/        # useBootstrap (REST + WS)
+│       └── store/        # Zustand
+├── mosquitto/            # config MQTT
+├── docker-compose.yml
+├── docs/
+│   └── architecture.md   # Documentation technique détaillée
+└── README.md
+```
+
+---
+
+## Tests
+
+```bash
+cd backend
+python -m venv .venv && source .venv/bin/activate
+pip install -e ".[dev]"
+pytest -q          # ~60 tests, < 5 s
+```
+
+---
+
+## Documentation technique
+
+Voir [`docs/architecture.md`](docs/architecture.md) pour :
+- diagramme d'architecture détaillé
+- flux de données (capteur → MQTT → backend → cache → frontend)
+- schéma de stockage (Redis keys, Influx measurements)
+- modèle ML (entrée, sortie, ré-entraînement)
+- contrat des messages MQTT
+- choix techniques et compromis
+
+---
+
+## Auteurs
+
+- Titouan Brunet
+- Usannaz Cedric
+
+Projet réalisé dans le cadre du Projet 2 — IoT Santé.
