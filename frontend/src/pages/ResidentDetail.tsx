@@ -18,6 +18,7 @@ const SCENARIO_LABELS: Record<string, { label: string; desc: string }> = {
   cardiac: { label: "Problème cardiaque", desc: "Simuler une anomalie cardiaque" },
   wandering: { label: "Errance", desc: "Simuler un déplacement inhabituel" },
   degradation: { label: "Dégradation lente", desc: "Simuler une dégradation progressive" },
+  fugue: { label: "Sortie / Fugue", desc: "Forcer porte ouverte + déambulation → alerte fugue" },
 };
 
 export function ResidentDetail() {
@@ -28,6 +29,9 @@ export function ResidentDetail() {
   const rooms = useStore((s) => s.rooms);
   const [rows, setRows] = useState<Array<{ time: string; field: string; value: number }>>([]);
   const [scenarioBusy, setScenarioBusy] = useState(false);
+  const [summary, setSummary] = useState<{ text: string; source: "ollama" | "template" } | null>(null);
+  const [summaryBusy, setSummaryBusy] = useState(false);
+  const [summaryErr, setSummaryErr] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -50,6 +54,19 @@ export function ResidentDetail() {
   const inject = async (name: string) => {
     setScenarioBusy(true);
     try { await api.injectScenario(id, name); } finally { setScenarioBusy(false); }
+  };
+
+  const generateSummary = async () => {
+    setSummaryBusy(true);
+    setSummaryErr(null);
+    try {
+      const r = await api.getSummary(id, 24);
+      setSummary({ text: r.summary, source: r.source });
+    } catch (e) {
+      setSummaryErr(e instanceof Error ? e.message : "Erreur génération rapport");
+    } finally {
+      setSummaryBusy(false);
+    }
   };
 
   if (!resident) {
@@ -235,6 +252,43 @@ export function ResidentDetail() {
         </CardHeader>
         <CardBody>
           <DailySchedule residentId={id} />
+        </CardBody>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <div className="font-semibold text-white">Rapport quotidien</div>
+              <div className="text-xs text-zinc-500 mt-0.5">
+                Synthèse automatique des dernières 24 h (constantes, activité, alertes).
+              </div>
+            </div>
+            <button
+              onClick={generateSummary}
+              disabled={summaryBusy}
+              className="px-3 py-1.5 rounded-md text-sm font-medium bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white"
+            >
+              {summaryBusy ? "Génération…" : summary ? "Régénérer" : "Générer"}
+            </button>
+          </div>
+        </CardHeader>
+        <CardBody>
+          {summaryErr && (
+            <div className="text-sm text-red-400 mb-2">Erreur : {summaryErr}</div>
+          )}
+          {summary ? (
+            <>
+              <div className="text-[10px] uppercase tracking-wide text-zinc-500 mb-2">
+                Source : {summary.source === "ollama" ? `LLM local (${summary.source})` : "repli template (Ollama indisponible)"}
+              </div>
+              <pre className="whitespace-pre-wrap text-sm text-zinc-200 leading-relaxed font-sans">{summary.text}</pre>
+            </>
+          ) : (
+            <div className="text-sm text-zinc-500">
+              Cliquez sur « Générer » pour produire un rapport quotidien via le LLM local (Ollama).
+            </div>
+          )}
         </CardBody>
       </Card>
 

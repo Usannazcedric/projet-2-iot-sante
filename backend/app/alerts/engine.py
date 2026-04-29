@@ -2,7 +2,9 @@ from __future__ import annotations
 import asyncio
 from typing import Any
 from .rules import evaluate
+from .fugue import evaluate_fugue
 from .store import AlertStore
+from ..profiles import room_of
 from ..logging import get_logger
 
 log = get_logger("backend.alerts.engine")
@@ -15,8 +17,11 @@ class AlertEngine:
         self.escalation = escalation
         self._running = False
 
-    async def evaluate_resident(self, resident_id: str, state: dict) -> None:
+    async def evaluate_resident(self, resident_id: str, state: dict, room_state: dict | None = None) -> None:
         result = evaluate(state)
+        fugue = evaluate_fugue(resident_id, state, room_state)
+        if fugue is not None and (result is None or int(fugue[0]) > int(result[0])):
+            result = fugue
         existing = await self.store.get_active_for_resident(resident_id)
 
         if result is None:
@@ -67,8 +72,13 @@ class AlertEngine:
                 ids = await cache.list_residents()
                 for rid in ids:
                     state = await cache.get_resident_state(rid)
-                    if state:
-                        await self.evaluate_resident(rid, state)
+                    if not state:
+                        continue
+                    room_state = None
+                    rid_room = room_of(rid)
+                    if rid_room is not None:
+                        room_state = await cache.get_room_state(rid_room)
+                    await self.evaluate_resident(rid, state, room_state)
             except Exception as exc:  # noqa: BLE001
                 log.error("loop_iteration_failed", err=str(exc))
             await asyncio.sleep(interval)

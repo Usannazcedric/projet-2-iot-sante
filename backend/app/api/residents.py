@@ -2,6 +2,7 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException, Query
 from datetime import datetime, timedelta, timezone
 from ..storage.redis import RedisCache
+from ..summary import generate_summary
 
 
 router = APIRouter()
@@ -56,3 +57,15 @@ async def get_activity_pattern(
     influx = _state["influx"]
     data = await influx.query_activity_pattern(resident_id, hours)
     return {"resident_id": resident_id, "hours": hours, "data": data}
+
+
+@router.get("/{resident_id}/summary")
+async def get_daily_summary(
+    resident_id: str,
+    hours: int = Query(24, ge=1, le=168),
+):
+    influx = _state["influx"]
+    try:
+        return await generate_summary(resident_id, influx, hours)
+    except ValueError as e:
+        raise HTTPException(404, str(e))

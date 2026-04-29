@@ -27,10 +27,14 @@ async def handle(family: str, key: str, raw: str | bytes, cache: RedisCache, inf
 
 async def _handle_vitals(data: dict[str, Any], cache: RedisCache, influx: Any, publisher: Any | None) -> None:
     payload = VitalsPayload.model_validate(data)
-    merged = await cache.merge_resident_state(payload.resident_id, {
+    partial: dict[str, Any] = {
         "last_seen": payload.timestamp,
         "vitals": payload.values.model_dump(),
-    })
+    }
+    sc = data.get("scenario")
+    if isinstance(sc, str):
+        partial["scenario"] = sc
+    merged = await cache.merge_resident_state(payload.resident_id, partial)
     await cache.push_ml_window(payload.resident_id, payload.values.model_dump())
     await influx.write_vitals(payload.resident_id, payload.timestamp, payload.values.model_dump())
     if publisher is not None:
@@ -44,10 +48,14 @@ async def _handle_vitals(data: dict[str, Any], cache: RedisCache, influx: Any, p
 
 async def _handle_motion(data: dict[str, Any], cache: RedisCache, influx: Any, publisher: Any | None) -> None:
     payload = MotionPayload.model_validate(data)
-    merged = await cache.merge_resident_state(payload.resident_id, {
+    partial: dict[str, Any] = {
         "last_seen": payload.timestamp,
         "motion": payload.values.model_dump(),
-    })
+    }
+    sc = data.get("scenario")
+    if isinstance(sc, str):
+        partial["scenario"] = sc
+    merged = await cache.merge_resident_state(payload.resident_id, partial)
     await influx.write_motion(payload.resident_id, payload.timestamp, payload.values.model_dump())
     if publisher is not None:
         try:

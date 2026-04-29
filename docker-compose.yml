@@ -96,6 +96,8 @@ services:
       LOG_LEVEL: INFO
       DEMO_MODE: "true"
       MODELS_DIR: /models
+      OLLAMA_URL: ${OLLAMA_URL:-http://ollama:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
     volumes:
       - models-data:/models
     restart: unless-stopped
@@ -105,6 +107,34 @@ services:
       timeout: 5s
       retries: 10
       start_period: 20s
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ehpad-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama-data:/root/.ollama
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "ollama list >/dev/null 2>&1 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+
+  ollama-init:
+    image: ollama/ollama:latest
+    container_name: ehpad-ollama-init
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
+    entrypoint: ["/bin/sh", "-c"]
+    command: ["ollama pull \"$$OLLAMA_MODEL\" && echo done"]
+    restart: "no"
 
   ws-gateway:
     build: ./ws-gateway
@@ -147,3 +177,4 @@ volumes:
   redis-data:
   influx-data:
   models-data:
+  ollama-data:

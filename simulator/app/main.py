@@ -129,13 +129,18 @@ async def ambient_loop(resident: Resident) -> None:
             qos=0,
         )
 
-        # Door: random open/close events, independent of scenarios
-        door_timer -= 5.0
-        if door_open and door_timer <= 0:
-            door_open = False
-        elif not door_open and door_timer <= 0 and random.random() < 0.04:
+        # Door: random open/close events, independent of scenarios.
+        # Force open while a fugue scenario is active.
+        if resident.scenario == "fugue":
             door_open = True
-            door_timer = random.uniform(4.0, 12.0)
+            door_timer = 5.0
+        else:
+            door_timer -= 5.0
+            if door_open and door_timer <= 0:
+                door_open = False
+            elif not door_open and door_timer <= 0 and random.random() < 0.04:
+                door_open = True
+                door_timer = random.uniform(4.0, 12.0)
 
         _publisher and _publisher.publish(
             f"ehpad/door/room/{resident.profile.room}",

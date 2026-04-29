@@ -14,7 +14,6 @@ export function useBootstrap() {
   const setRoom = useStore((s) => s.setRoom);
   const setRoomBulk = useStore((s) => s.setRoomBulk);
   const setGuards = useStore((s) => s.setGuards);
-  const guards = useStore((s) => s.guards);
   const pushToast = useToasts((s) => s.push);
 
   useEffect(() => {
@@ -73,5 +72,5 @@ export function useBootstrap() {
       cancelled = true;
       close();
     };
-  }, [setResidentBulk, setAlertBulk, setResident, upsertAlert, setConnected, pushToast, setRoom, setRoomBulk, setGuards, guards]);
+  }, [setResidentBulk, setAlertBulk, setResident, upsertAlert, setConnected, pushToast, setRoom, setRoomBulk, setGuards]);
 }

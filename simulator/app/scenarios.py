@@ -108,3 +108,21 @@ def _wandering(demo: bool) -> Scenario:
 @register("degradation")
 def _degradation(demo: bool) -> Scenario:
     return Degradation(duration=timedelta(minutes=3) if demo else timedelta(minutes=30))
+
+
+@dataclass
+class Fugue:
+    started: datetime | None = None
+    duration: timedelta = timedelta(minutes=2)
+    def apply(self, r: Resident, now: datetime) -> None:
+        if self.started is None:
+            self.started = now
+        r.scenario = "fugue"
+        r.activity = "walking"
+    def is_done(self, now: datetime) -> bool:
+        return self.started is not None and (now - self.started) >= self.duration
+
+
+@register("fugue")
+def _fugue(demo: bool) -> Scenario:
+    return Fugue(duration=timedelta(seconds=45) if demo else timedelta(minutes=2))

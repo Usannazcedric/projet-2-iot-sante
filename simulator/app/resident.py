@@ -34,6 +34,7 @@ class Resident:
             "resident_id": self.profile.id,
             "values": dict(v),
             "vitals": dict(v),
+            "scenario": self.scenario,
             "seq": next(self.seq_vitals),
         }
 
@@ -44,5 +45,6 @@ class Resident:
             "timestamp": ts,
             "resident_id": self.profile.id,
             "values": dict(a),
+            "scenario": self.scenario,
             "seq": next(self.seq_motion),
         }

@@ -91,4 +91,8 @@ export const api = {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name }),
     }),
+  getSummary: (id: string, hours = 24) =>
+    http<{ resident_id: string; hours: number; summary: string; source: "ollama" | "template" }>(
+      `${API_BASE}/residents/${id}/summary?hours=${hours}`,
+    ),
 };
